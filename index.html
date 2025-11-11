@@ -3,56 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Лесное приключение</title>
+    <title>Змейка - Веб версия</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #2e8b57, #228b22);
+            background: linear-gradient(135deg, #2c3e50, #34495e);
             margin: 0;
             padding: 20px;
             color: white;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
         
         .game-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             padding: 20px;
             border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
         }
         
-        .player-info {
-            background: #8b4513;
-            padding: 15px;
-            border-radius: 10px;
+        .game-info {
             margin-bottom: 20px;
         }
         
-        .forest-map {
-            display: grid;
-            grid-template-columns: repeat(11, 40px);
-            grid-template-rows: repeat(11, 40px);
-            gap: 2px;
-            margin: 20px auto;
-            justify-content: center;
-        }
-        
-        .map-cell {
-            width: 40px;
-            height: 40px;
-            background: #006400;
-            border: 1px solid #004d00;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        
-        .player-cell {
-            background: #ff4500;
-            border-radius: 50%;
+        #gameCanvas {
+            border: 3px solid #27ae60;
+            border-radius: 10px;
+            background: #1a1a1a;
         }
         
         .controls {
@@ -60,122 +41,241 @@
         }
         
         button {
-            background: #8b4513;
+            background: #27ae60;
             color: white;
             border: none;
-            padding: 10px 20px;
-            margin: 5px;
-            border-radius: 5px;
+            padding: 12px 25px;
+            margin: 10px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            transition: background 0.3s;
+            font-weight: bold;
+            transition: all 0.3s;
         }
         
         button:hover {
-            background: #a0522d;
+            background: #2ecc71;
+            transform: scale(1.05);
         }
         
-        .location-info {
-            background: #556b2f;
-            padding: 15px;
-            border-radius: 10px;
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f39c12;
+            margin: 15px 0;
+        }
+        
+        .game-over {
+            color: #e74c3c;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .instructions {
             margin-top: 20px;
-            font-style: italic;
+            color: #bdc3c7;
+            font-size: 14px;
+        }
+        
+        .mobile-controls {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .mobile-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 20px;
+            background: #3498db;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: grid;
+            }
         }
     </style>
 </head>
 <body>
+    <h1>🐍 Змейка 🐍</h1>
+    
+    <div class="game-info">
+        <div class="score">Счет: <span id="score">0</span></div>
+        <div id="gameOver" class="game-over" style="display: none;">ИГРА ОКОНЧЕНА!</div>
+    </div>
+    
     <div class="game-container">
-        <h1>🌲 Лесное Приключение 🌲</h1>
-        
-        <div class="player-info">
-            <h2>Игрок: <span id="playerName">Искатель приключений</span></h2>
-            <p>Позиция: X=<span id="playerX">5</span>, Y=<span id="playerY">5</span></p>
-        </div>
-        
-        <div class="forest-map" id="forestMap">
-            <!-- Карта будет сгенерирована JavaScript -->
-        </div>
-        
-        <div class="controls">
-            <form action="/move" method="post" style="display: inline;">
-                <button type="submit" name="direction" value="up">⬆️ Вверх</button>
-            </form>
-            <br>
-            <form action="/move" method="post" style="display: inline;">
-                <button type="submit" name="direction" value="left">⬅️ Влево</button>
-                <button type="submit" name="direction" value="right">➡️ Вправо</button>
-            </form>
-            <br>
-            <form action="/move" method="post" style="display: inline;">
-                <button type="submit" name="direction" value="down">⬇️ Вниз</button>
-            </form>
-            <br><br>
-            <form action="/reset" method="post">
-                <button type="submit">🔄 Начать заново</button>
-            </form>
-        </div>
-        
-        <div class="location-info" id="locationInfo">
-            Вы в центре леса. Слышно пение птиц.
-        </div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+    </div>
+    
+    <div class="controls">
+        <button onclick="resetGame()">🔄 Новая игра</button>
+    </div>
+    
+    <div class="mobile-controls">
+        <div></div>
+        <button class="mobile-btn" onclick="changeDirection('UP')">⬆️</button>
+        <div></div>
+        <button class="mobile-btn" onclick="changeDirection('LEFT')">⬅️</button>
+        <div></div>
+        <button class="mobile-btn" onclick="changeDirection('RIGHT')">➡️</button>
+        <div></div>
+        <button class="mobile-btn" onclick="changeDirection('DOWN')">⬇️</button>
+        <div></div>
+    </div>
+    
+    <div class="instructions">
+        <p>Используй стрелки для управления 🎮</p>
+        <p>Собирай красные яблоки 🍎 и расти!</p>
     </div>
 
     <script>
-        // Функция для обновления карты
-        function updateMap() {
-            fetch('/api/player')
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const CELL_SIZE = 20;
+        const GRID_SIZE = 20;
+        
+        let gameState = {
+            snake: [],
+            food: {x: 0, y: 0},
+            score: 0,
+            gameOver: false,
+            direction: 'RIGHT'
+        };
+        
+        // Обработчики клавиш
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp': changeDirection('UP'); break;
+                case 'ArrowDown': changeDirection('DOWN'); break;
+                case 'ArrowLeft': changeDirection('LEFT'); break;
+                case 'ArrowRight': changeDirection('RIGHT'); break;
+                case 'r': case 'R': resetGame(); break;
+            }
+        });
+        
+        function changeDirection(direction) {
+            fetch(`/api/snake/move?direction=${direction}`, {method: 'POST'})
                 .then(response => response.json())
-                .then(player => {
-                    // Обновляем информацию об игроке
-                    document.getElementById('playerX').textContent = player.x;
-                    document.getElementById('playerY').textContent = player.y;
-                    document.getElementById('playerName').textContent = player.name;
-                    
-                    // Генерируем карту
-                    const map = document.getElementById('forestMap');
-                    map.innerHTML = '';
-                    
-                    for (let y = 0; y <= player.maxY; y++) {
-                        for (let x = 0; x <= player.maxX; x++) {
-                            const cell = document.createElement('div');
-                            cell.className = 'map-cell';
-                            
-                            if (x === player.x && y === player.y) {
-                                cell.classList.add('player-cell');
-                                cell.textContent = '🧙';
-                            } else if (Math.random() > 0.7) {
-                                cell.textContent = '🌳';
-                            } else {
-                                cell.textContent = '·';
-                            }
-                            
-                            map.appendChild(cell);
-                        }
-                    }
-                    
-                    // Обновляем описание локации
-                    document.getElementById('locationInfo').textContent = 
-                        getLocationDescription(player.x, player.y, player.maxX, player.maxY);
+                .then(state => {
+                    gameState = state;
+                    drawGame();
                 });
         }
         
-        function getLocationDescription(x, y, maxX, maxY) {
-            if (x === 0 && y === 0) return "Вы на опушке леса. Видите старый дуб.";
-            if (x === maxX && y === maxY) return "Вы на вершине холма. Отсюда виден весь лес.";
-            if (x === 5 && y === 5) return "Вы в центре леса. Слышно пение птиц.";
-            if (x === 0) return "Вы у западной границы леса.";
-            if (x === maxX) return "Вы у восточной границы леса.";
-            if (y === 0) return "Вы у северной границы леса.";
-            if (y === maxY) return "Вы у южной границы леса.";
-            return "Вы в глубине леса. Деревья шумят на ветру.";
+        function updateGame() {
+            fetch('/api/snake/update', {method: 'POST'})
+                .then(response => response.json())
+                .then(state => {
+                    gameState = state;
+                    drawGame();
+                    updateUI();
+                    
+                    if (!state.gameOver) {
+                        setTimeout(updateGame, 150);
+                    }
+                });
         }
         
-        // Обновляем карту при загрузке страницы
-        document.addEventListener('DOMContentLoaded', updateMap);
+        function resetGame() {
+            fetch('/api/snake/reset', {method: 'POST'})
+                .then(response => response.json())
+                .then(state => {
+                    gameState = state;
+                    drawGame();
+                    updateUI();
+                    if (!state.gameOver) {
+                        setTimeout(updateGame, 150);
+                    }
+                });
+        }
         
-        // Обновляем карту каждые 2 секунды (на случай если другие вкладки изменят состояние)
-        setInterval(updateMap, 2000);
+        function drawGame() {
+            // Очищаем canvas
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисуем сетку
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * CELL_SIZE, 0);
+                ctx.lineTo(i * CELL_SIZE, canvas.height);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i * CELL_SIZE);
+                ctx.lineTo(canvas.width, i * CELL_SIZE);
+                ctx.stroke();
+            }
+            
+            // Рисуем еду
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(
+                gameState.food.x * CELL_SIZE + CELL_SIZE/2,
+                gameState.food.y * CELL_SIZE + CELL_SIZE/2,
+                CELL_SIZE/2 - 1, 0, Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Рисуем змейку
+            gameState.snake.forEach((segment, index) => {
+                if (index === 0) {
+                    // Голова
+                    ctx.fillStyle = '#27ae60';
+                } else {
+                    // Тело
+                    ctx.fillStyle = '#2ecc71';
+                }
+                
+                ctx.fillRect(
+                    segment.x * CELL_SIZE + 1,
+                    segment.y * CELL_SIZE + 1,
+                    CELL_SIZE - 2,
+                    CELL_SIZE - 2
+                );
+                
+                // Глаза у головы
+                if (index === 0) {
+                    ctx.fillStyle = '#000';
+                    const eyeSize = 3;
+                    const offset = 5;
+                    
+                    // Левый глаз
+                    ctx.beginPath();
+                    ctx.arc(
+                        segment.x * CELL_SIZE + offset,
+                        segment.y * CELL_SIZE + offset,
+                        eyeSize, 0, Math.PI * 2
+                    );
+                    ctx.fill();
+                    
+                    // Правый глаз
+                    ctx.beginPath();
+                    ctx.arc(
+                        (segment.x + 1) * CELL_SIZE - offset,
+                        segment.y * CELL_SIZE + offset,
+                        eyeSize, 0, Math.PI * 2
+                    );
+                    ctx.fill();
+                }
+            });
+        }
+        
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('gameOver').style.display = 
+                gameState.gameOver ? 'block' : 'none';
+        }
+        
+        // Запуск игры
+        resetGame();
     </script>
 </body>
 </html>
