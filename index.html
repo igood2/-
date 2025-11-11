@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лесное приключение</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2e8b57, #228b22);
+            margin: 0;
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        
+        .game-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .player-info {
+            background: #8b4513;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .forest-map {
+            display: grid;
+            grid-template-columns: repeat(11, 40px);
+            grid-template-rows: repeat(11, 40px);
+            gap: 2px;
+            margin: 20px auto;
+            justify-content: center;
+        }
+        
+        .map-cell {
+            width: 40px;
+            height: 40px;
+            background: #006400;
+            border: 1px solid #004d00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .player-cell {
+            background: #ff4500;
+            border-radius: 50%;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #8b4513;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #a0522d;
+        }
+        
+        .location-info {
+            background: #556b2f;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌲 Лесное Приключение 🌲</h1>
+        
+        <div class="player-info">
+            <h2>Игрок: <span id="playerName">Искатель приключений</span></h2>
+            <p>Позиция: X=<span id="playerX">5</span>, Y=<span id="playerY">5</span></p>
+        </div>
+        
+        <div class="forest-map" id="forestMap">
+            <!-- Карта будет сгенерирована JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <form action="/move" method="post" style="display: inline;">
+                <button type="submit" name="direction" value="up">⬆️ Вверх</button>
+            </form>
+            <br>
+            <form action="/move" method="post" style="display: inline;">
+                <button type="submit" name="direction" value="left">⬅️ Влево</button>
+                <button type="submit" name="direction" value="right">➡️ Вправо</button>
+            </form>
+            <br>
+            <form action="/move" method="post" style="display: inline;">
+                <button type="submit" name="direction" value="down">⬇️ Вниз</button>
+            </form>
+            <br><br>
+            <form action="/reset" method="post">
+                <button type="submit">🔄 Начать заново</button>
+            </form>
+        </div>
+        
+        <div class="location-info" id="locationInfo">
+            Вы в центре леса. Слышно пение птиц.
+        </div>
+    </div>
+
+    <script>
+        // Функция для обновления карты
+        function updateMap() {
+            fetch('/api/player')
+                .then(response => response.json())
+                .then(player => {
+                    // Обновляем информацию об игроке
+                    document.getElementById('playerX').textContent = player.x;
+                    document.getElementById('playerY').textContent = player.y;
+                    document.getElementById('playerName').textContent = player.name;
+                    
+                    // Генерируем карту
+                    const map = document.getElementById('forestMap');
+                    map.innerHTML = '';
+                    
+                    for (let y = 0; y <= player.maxY; y++) {
+                        for (let x = 0; x <= player.maxX; x++) {
+                            const cell = document.createElement('div');
+                            cell.className = 'map-cell';
+                            
+                            if (x === player.x && y === player.y) {
+                                cell.classList.add('player-cell');
+                                cell.textContent = '🧙';
+                            } else if (Math.random() > 0.7) {
+                                cell.textContent = '🌳';
+                            } else {
+                                cell.textContent = '·';
+                            }
+                            
+                            map.appendChild(cell);
+                        }
+                    }
+                    
+                    // Обновляем описание локации
+                    document.getElementById('locationInfo').textContent = 
+                        getLocationDescription(player.x, player.y, player.maxX, player.maxY);
+                });
+        }
+        
+        function getLocationDescription(x, y, maxX, maxY) {
+            if (x === 0 && y === 0) return "Вы на опушке леса. Видите старый дуб.";
+            if (x === maxX && y === maxY) return "Вы на вершине холма. Отсюда виден весь лес.";
+            if (x === 5 && y === 5) return "Вы в центре леса. Слышно пение птиц.";
+            if (x === 0) return "Вы у западной границы леса.";
+            if (x === maxX) return "Вы у восточной границы леса.";
+            if (y === 0) return "Вы у северной границы леса.";
+            if (y === maxY) return "Вы у южной границы леса.";
+            return "Вы в глубине леса. Деревья шумят на ветру.";
+        }
+        
+        // Обновляем карту при загрузке страницы
+        document.addEventListener('DOMContentLoaded', updateMap);
+        
+        // Обновляем карту каждые 2 секунды (на случай если другие вкладки изменят состояние)
+        setInterval(updateMap, 2000);
+    </script>
+</body>
+</html>
