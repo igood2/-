@@ -3,279 +3,715 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Змейка - Веб версия</title>
-    <style>
+    <meta name="theme-color" content="#2d5016">
+    <meta name="description" content="Игра: Леприкон и Бочка - Проект Павла 7-И класс">
+    <title>🍀 Леприкон и Бочка</title>
+    <link rel="manifest" href="data:application/json,{\"name\":\"Леприкон и Бочка\",\"short_name\":\"Леприкон\",\"icons\":[],\"display\":\"standalone\"}">
+    <script type="text/javascript" src="https://me.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=U-4bUtIvCaPPKQ23d5Bo97m9swrf-2AQMaVk6uGJaEXd5CwbK120zbpjt8jN-fIieuF1F3u4Bndwx3tIbL1xDgvkjECE2D-Jk1O6tIoX0HjmgShIRsjQRV8kG0LThtC2Wh-ofIJWiR0RjMKo7FBfLav06Jn11MyFL3PQTvsuaqrrgavyMm7K7EEHJ4YhZrZ2xSDKqIze0pd7loimGeeeUP8xP7t-Uy_qUVFy4UxO8scKuji25K1GZlS57R4olFuI1tKZ8SvC-e1mSJGlkZN4dIMNHN0EYdiP6immg1IE74eVc8oUZyjMwOCs0s757QNyqUn27w1CphSpBRV6lDEf5diPVCIBvBN40mOCnNhp4puHqIVORoRJqcfouB_cGU99soCAEqtgq_KdnEWpmEFC7oIBtQqcrzmEUPB-oNpN6yeSFOhV2CiqKu-89YkypxM0-whux4W5t3qY3u4JqukeHurShrycTX6baRxYIyBiQ0gUpQ7pFsqHQLOaZIFIJ_S_IHsOabVcyBqBt4lxi2UUbjZMP7je7NMEAM69LI06HY858BNmvZC2kb1E_CBRryigxmaM3WOWJ4MSnJaNAcw6opLA0xcI8ziAp5MGhWu8GoyB7BGkWNyCps7Rt4SYeo7GEr1gFmwkyt_olTLOVRIghMbuKedeRAkSc3Vsi7wqAFL-Ha1p8ulp3WSv4YVO8ogjWz1Z_4JUq7xfwIQ-xPmo808fn-W3QvfIzBWF2yRNfewAjtjhuA9CYX-2CqBTSOoPj46LLHkJZEAHB3Ayq95HoZI3_GhWo8XMN7VyqsStXLcRePUCO30U3Twoy-3ycY0dtP-wWcc7JOCDLlIp32aJMFiBp5eri6JnHE7ep8Agyzc5Fs8V1VovnHV6dnLzhwr97C_RFdpcI2J3lE52rqhEX5TZSiJFcpWI7jUWmLXvFd3k0hYpc6UUsvQQYpdtjZv3rpCpMcjEEL51pawf1cr1DPuzyX3v9vzThGd_hSBnUnxSW7uMJTG0nsbp981AM0hV06N9O6BGUEkWUTzr-gVY1pyr9WOibo493xBOlLmJ_WyF6KvItW-F2nAxmZEwinNz5KNJVFvmQtws--NRrqVfmuGgRvjKlHBrcqURbE-jSmswPV5amq7KnUXsusSSdSYF8ZVpoF8LPyg4UQBfpPXdeBnY4-Cte4xc-j5hZpveOffTaAGjXYLPoSUvDwvqjr4LD0fbdwYax30XAF0CF_9EjjaMJgWY9ItfgpKfS_erLFynbOAM2IcRGnIqxdhwgkDK71snbuLE9Xo_enjNI6U8dA1pcw5o2xv8CQ5Di4_Gcgp-NxuKeHdWnXZCYMiFzBE2Zqxh2D3S0BAVVT4P3M1iT5kEVcJdyPPRA0B58SpiMSLE5r77t2FiYBx3ErZTeTcYvjTngzt9RaiUVeXzOC7Rm4fFSf6pWYOE5maorUmUJHNPD09g-sG8TBc9XQdfgrf2ifF8fqiDKM6cA1bgDXcsclc9dOZmcyBkw-GkmLsbM_0xObJ9bCsC-dcPjsL9h7EzSnFPeaGpi1aglhDfv_H8yjtPhPJh6fw6mmD7H8jJE3-N6sDX-KfGvl66Xg4MuRuMnGDWHalQa_oa5D2mLIL5PHxIUDpOykaPiNX_VYuqrlZJw951PrIiCO8bro-RdnG9NHdFekyzTqMfDxjPY1n3FVy17X-ZpCsQ6EBIClQG_K85D_BUFd_Z_YRL4cIIdviMACqTMBbLecpN4yF1UMlir9aOU9degp98JVjXsC3UI93ghudNORNKcZvgwasS8U6g_puYtaMppqcoBrQD-y2zqQst1GVeMvhsNNDtzW5f0jpwLHRfSwgut4FPENOj_k9crrFgpzXYylz0tmUTnSFSKQNXnDDppD2bhL6rNR4kFPii2fxXovja11BOs20_3hUhNMnTXm-I-DDnIKSEMgZYo3atznKBvystFnttghpU7NTGULzSvRph8bi2TDzWEuCfKrKPm3Tjyr7AXIofD82pHeOhc9-LV0IOrhNOVIGt6RSptexPjMiVO10TPqaVg8xNaHEKk714lFl1xI5rdornHFLyZwg9ntyVYCM0lEAkTU-MFN7NwelvPpKVI3aBZjFdiCRf_D19GT9EM3HN-Ylz88lQhhSSlCkwWWeH3fwtiyvdUMJE1KAduH-rE291uUkqa_HR6v-vMdxHshWqo3tTbB3Mvljb2B1-yDNjt2Q5a_IUw3uJRq-33bu4FarJZd9YzFbiHLwOmMfcyFAjyCM9wqTs5DqZgZFMP7YBXK49PLM" charset="UTF-8"></script><style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            margin: 0;
-            padding: 20px;
-            color: white;
-            text-align: center;
+            background: linear-gradient(135deg, #1a4d2e 0%, #2d5016 100%);
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             min-height: 100vh;
+            color: #333;
         }
-        
-        .game-container {
-            background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-            margin-top: 20px;
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 1100px;
+            width: 90%;
         }
-        
-        .game-info {
-            margin-bottom: 20px;
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
         }
-        
+        .header h1 {
+            font-size: 48px;
+            color: #2d5016;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        .header p {
+            font-size: 18px;
+            color: #666;
+            margin: 10px 0;
+        }
+        .game-wrapper {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .game-area {
+            flex: 1;
+        }
         #gameCanvas {
-            border: 3px solid #27ae60;
+            border: 3px solid #2d5016;
             border-radius: 10px;
-            background: #1a1a1a;
+            display: block;
+            background: linear-gradient(180deg, #87CEEB 0%, #90EE90 100%);
+            cursor: pointer;
+            max-width: 100%;
+            height: auto;
         }
-        
         .controls {
-            margin: 20px 0;
+            margin-top: 20px;
+            text-align: center;
         }
-        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
         button {
-            background: #27ae60;
-            color: white;
+            padding: 12px 24px;
+            font-size: 16px;
             border: none;
-            padding: 12px 25px;
-            margin: 10px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
             transition: all 0.3s;
-        }
-        
-        button:hover {
-            background: #2ecc71;
-            transform: scale(1.05);
-        }
-        
-        .score {
-            font-size: 24px;
             font-weight: bold;
-            color: #f39c12;
-            margin: 15px 0;
         }
-        
-        .game-over {
-            color: #e74c3c;
-            font-size: 32px;
-            font-weight: bold;
-            margin: 20px 0;
+        .btn-primary {
+            background: #2d5016;
+            color: white;
         }
-        
-        .instructions {
-            margin-top: 20px;
-            color: #bdc3c7;
+        .btn-primary:hover {
+            background: #1a4d2e;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 80, 22, 0.3);
+        }
+        .btn-secondary {
+            background: #FFD700;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #FFC700;
+            transform: translateY(-2px);
+        }
+        .btn-small {
+            padding: 8px 12px;
             font-size: 14px;
         }
-        
-        .mobile-controls {
+        .panel {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            width: 220px;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 2px solid #ddd;
+        }
+        .panel h3 {
+            margin-bottom: 15px;
+            color: #2d5016;
+            font-size: 16px;
+        }
+        .color-control {
+            margin-bottom: 15px;
+        }
+        .color-control label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .color-control input[type="color"] {
+            width: 100%;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .zoom-control {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .zoom-control input {
+            width: 100%;
+            margin-top: 5px;
+        }
+        #statusText {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d5016;
+        }
+        .screen {
             display: none;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 20px;
         }
-        
-        .mobile-btn {
-            width: 60px;
-            height: 60px;
+        .screen.active {
+            display: block;
+        }
+        .start-screen {
+            text-align: center;
+        }
+        .start-screen h2 {
+            font-size: 36px;
+            color: #2d5016;
+            margin: 20px 0;
+        }
+        .start-screen p {
+            font-size: 18px;
+            color: #666;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+        .win-screen {
+            text-align: center;
+        }
+        .win-screen h2 {
+            font-size: 48px;
+            color: #FFD700;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .win-screen p {
             font-size: 20px;
-            background: #3498db;
+            color: #333;
+            margin: 20px 0;
         }
-        
-        @media (max-width: 768px) {
-            .mobile-controls {
-                display: grid;
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+            font-style: italic;
+        }
+        @media (max-width: 900px) {
+            .game-wrapper {
+                flex-direction: column;
+            }
+            .panel {
+                width: 100%;
+                max-height: none;
             }
         }
     </style>
 </head>
 <body>
-    <h1>🐍 Змейка 🐍</h1>
-    
-    <div class="game-info">
-        <div class="score">Счет: <span id="score">0</span></div>
-        <div id="gameOver" class="game-over" style="display: none;">ИГРА ОКОНЧЕНА!</div>
-    </div>
-    
-    <div class="game-container">
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-    </div>
-    
-    <div class="controls">
-        <button onclick="resetGame()">🔄 Новая игра</button>
-    </div>
-    
-    <div class="mobile-controls">
-        <div></div>
-        <button class="mobile-btn" onclick="changeDirection('UP')">⬆️</button>
-        <div></div>
-        <button class="mobile-btn" onclick="changeDirection('LEFT')">⬅️</button>
-        <div></div>
-        <button class="mobile-btn" onclick="changeDirection('RIGHT')">➡️</button>
-        <div></div>
-        <button class="mobile-btn" onclick="changeDirection('DOWN')">⬇️</button>
-        <div></div>
-    </div>
-    
-    <div class="instructions">
-        <p>Используй стрелки для управления 🎮</p>
-        <p>Собирай красные яблоки 🍎 и расти!</p>
+    <div class="container">
+        <div class="header">
+            <h1>🍀 Леприкон и Бочка 🍀</h1>
+            <p>Проект Павла, 7-И класс</p>
+        </div>
+
+        <div id="startScreen" class="screen active start-screen">
+            <h2>Добро пожаловать в лес!</h2>
+            <p>🌲 Помоги найти леприкона в волшебном лесу 🌲</p>
+            <p style="color: #666; font-size: 16px;">Когда ты найдёшь леприкона, он покажет тебе дорогу к золотому бочонку!</p>
+            <br>
+            <button class="btn-primary" style="padding: 16px 40px; font-size: 20px;" onclick="startGame()">
+                🎮 Начать игру
+            </button>
+            <p style="margin-top: 30px; color: #999;">Управление: ↑ ↓ ← → или WASD</p>
+        </div>
+
+        <div id="gameScreen" class="screen">
+            <div id="statusText">Ищем леприкона...</div>
+            <div class="game-wrapper">
+                <div class="game-area">
+                    <canvas id="gameCanvas" width="1000" height="600"></canvas>
+                    <div class="controls">
+                        <div class="button-group">
+                            <button class="btn-secondary btn-small" onclick="changeZoom(0.1)">🔍 +</button>
+                            <button class="btn-secondary btn-small" onclick="changeZoom(-0.1)">🔍 −</button>
+                            <button class="btn-primary btn-small" onclick="resetGame()">↺ Перезагрузить</button>
+                            <button class="btn-primary btn-small" onclick="goToStart()">🏠 В меню</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <h3>⚙️ Настройки</h3>
+                    <div class="zoom-control">
+                        <label>Масштаб: <span id="zoomValue">1x</span></label>
+                        <input type="range" min="0.5" max="2" step="0.1" value="1" onchange="setZoom(this.value)">
+                    </div>
+                    <h3>🎨 Цвета</h3>
+                    <div class="color-control">
+                        <label>Игрок</label>
+                        <input type="color" id="colorPlayer" value="#3366FF" onchange="updateColor('player')">
+                    </div>
+                    <div class="color-control">
+                        <label>Леприкон</label>
+                        <input type="color" id="colorLeprechaun" value="#22DD44" onchange="updateColor('leprechaun')">
+                    </div>
+                    <div class="color-control">
+                        <label>Деревья</label>
+                        <input type="color" id="colorTrees" value="#8B4513" onchange="updateColor('trees')">
+                    </div>
+                    <div class="color-control">
+                        <label>Трава</label>
+                        <input type="color" id="colorGrass" value="#00AA00" onchange="updateColor('grass')">
+                    </div>
+                    <div class="color-control">
+                        <label>Бочка</label>
+                        <input type="color" id="colorBarrel" value="#FFD700" onchange="updateColor('barrel')">
+                    </div>
+                    <button class="btn-secondary" style="width: 100%; margin-top: 15px;" onclick="resetColors()">
+                        ↺ Стандартные
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="winScreen" class="screen win-screen">
+            <h2>🎉 Ты нашёл золото! 🎉</h2>
+            <p>Леприкон был прав — золото было в лесу!</p>
+            <p style="color: #666; margin-top: 30px;">🏆 Поздравляем с победой! 🏆</p>
+            <br>
+            <button class="btn-primary" style="padding: 16px 40px; font-size: 18px;" onclick="startGame()">
+                🎮 Играть снова
+            </button>
+        </div>
+
+        <div class="footer">
+            Проект Павла, 7-И класс | Создано с помощью Web Technologies
+        </div>
     </div>
 
     <script>
+        // Game Configuration
+        const config = {
+            canvasWidth: 1000,
+            canvasHeight: 600,
+            playerSize: 30,
+            leprechaunSize: 40,
+            barrelSize: 50,
+            treeWidth: 50,
+            treeHeight: 100,
+            stoneSize: 30,
+            speed: 5,
+            leprechaunSpeed:1000
+        };
+
+        let gameState = {
+            screen: 'start',
+            zoom: 1,
+            found: false,
+            colors: {
+                player: '#3366FF',
+                leprechaun: '#22DD44',
+                trees: '#8B4513',
+                grass: '#00AA00',
+                barrel: '#FFD700',
+                stones: '#888888'
+            }
+        };
+
+        let player = {
+            x: 100,
+            y: 300,
+            width: config.playerSize,
+            height: config.playerSize,
+            velX: 0,
+            velY: 0
+        };
+
+        let leprechaun = {
+            x: 800,
+            y: 300,
+            width: config.leprechaunSize,
+            height: config.leprechaunSize,
+            velX: 0,
+            velY: 0,
+            changeTimer: 0,
+            changeInterval: 60
+        };
+
+        const barrel = {
+            x: 900,
+            y: 500,
+            width: config.barrelSize,
+            height: config.barrelSize
+        };
+
+        const trees = [];
+        const stones = [];
+
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const CELL_SIZE = 20;
-        const GRID_SIZE = 20;
-        
-        let gameState = {
-            snake: [],
-            food: {x: 0, y: 0},
-            score: 0,
-            gameOver: false,
-            direction: 'RIGHT'
-        };
-        
-        // Обработчики клавиш
+
+        const keys = {};
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Initialize obstacles
+        function initObstacles() {
+            trees.length = 0;
+            stones.length = 0;
+            
+            const treePositions = [
+                {x: 300, y: 100}, {x: 600, y: 200}, {x: 150, y: 400},
+                {x: 700, y: 400}, {x: 400, y: 450}, {x: 800, y: 150},
+                {x: 200, y: 150}, {x: 500, y: 350}
+            ];
+            
+            treePositions.forEach(pos => {
+                trees.push({x: pos.x, y: pos.y, width: config.treeWidth, height: config.treeHeight});
+            });
+
+            for (let i = 0; i < 12; i++) {
+                stones.push({
+                    x: Math.random() * (config.canvasWidth - config.stoneSize),
+                    y: Math.random() * (config.canvasHeight - config.stoneSize),
+                    width: config.stoneSize,
+                    height: config.stoneSize
+                });
+            }
+        }
+
+        // Input handling
         document.addEventListener('keydown', (e) => {
-            switch(e.key) {
-                case 'ArrowUp': changeDirection('UP'); break;
-                case 'ArrowDown': changeDirection('DOWN'); break;
-                case 'ArrowLeft': changeDirection('LEFT'); break;
-                case 'ArrowRight': changeDirection('RIGHT'); break;
-                case 'r': case 'R': resetGame(); break;
+            keys[e.key.toLowerCase()] = true;
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
             }
         });
-        
-        function changeDirection(direction) {
-            fetch(`/api/snake/move?direction=${direction}`, {method: 'POST'})
-                .then(response => response.json())
-                .then(state => {
-                    gameState = state;
-                    drawGame();
-                });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        // Touch controls
+        let touchStartX, touchStartY;
+        canvas.addEventListener('touchstart', (e) => {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!touchStartX || !touchStartY) return;
+            const touchEndX = e.touches[0].clientX;
+            const touchEndY = e.touches[0].clientY;
+            const diffX = touchEndX - touchStartX;
+            const diffY = touchEndY - touchStartY;
+
+            player.velX = 0;
+            player.velY = 0;
+
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                player.velX = diffX > 0 ? config.speed : -config.speed;
+            } else {
+                player.velY = diffY > 0 ? config.speed : -config.speed;
+            }
+        });
+
+        // Collision detection
+        function checkCollision(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
         }
-        
-        function updateGame() {
-            fetch('/api/snake/update', {method: 'POST'})
-                .then(response => response.json())
-                .then(state => {
-                    gameState = state;
-                    drawGame();
-                    updateUI();
-                    
-                    if (!state.gameOver) {
-                        setTimeout(updateGame, 150);
+
+        // Play sounds
+        function playSound(freq, duration, type = 'sine') {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            osc.start();
+            osc.stop(audioContext.currentTime + duration);
+        }
+
+        function playMeetSound() {
+            playSound(523, 0.2); // C5
+            setTimeout(() => playSound(659, 0.2), 100); // E5
+            setTimeout(() => playSound(784, 0.2), 200); // G5
+        }
+
+        function playWinSound() {
+            playSound(523, 0.2);
+            setTimeout(() => playSound(659, 0.2), 100);
+            setTimeout(() => playSound(784, 0.2), 200);
+            setTimeout(() => playSound(1047, 0.3), 300);
+        }
+
+        // Update game
+        function update() {
+            if (gameState.screen !== 'game') return;
+
+            // Player movement
+            player.velX = 0;
+            player.velY = 0;
+
+            if (keys['arrowup'] || keys['w']) player.velY = -config.speed;
+            if (keys['arrowdown'] || keys['s']) player.velY = config.speed;
+            if (keys['arrowleft'] || keys['a']) player.velX = -config.speed;
+            if (keys['arrowright'] || keys['d']) player.velX = config.speed;
+
+            // Update player position
+            let newX = player.x + player.velX;
+            let newY = player.y + player.velY;
+
+            // Boundary check
+            newX = Math.max(0, Math.min(newX, config.canvasWidth - player.width));
+            newY = Math.max(0, Math.min(newY, config.canvasHeight - player.height));
+
+            // Collision with obstacles
+            let canMove = true;
+            for (let tree of trees) {
+                if (checkCollision({...player, x: newX, y: newY}, tree)) {
+                    canMove = false;
+                    break;
+                }
+            }
+            if (!canMove) {
+                newX = player.x;
+                newY = player.y;
+            }
+
+            player.x = newX;
+            player.y = newY;
+
+            // Leprechaun AI
+            if (!gameState.found) {
+                leprechaun.changeTimer++;
+                if (leprechaun.changeTimer >= leprechaun.changeInterval) {
+                    const angle = Math.random() * Math.PI * 2;
+                    leprechaun.velX = Math.cos(angle) * config.leprechaunSpeed;
+                    leprechaun.velY = Math.sin(angle) * config.leprechaunSpeed;
+                    leprechaun.changeTimer = 0;
+                    leprechaun.changeInterval = 30 + Math.random() * 60;
+                }
+
+                let lepX = leprechaun.x + leprechaun.velX;
+                let lepY = leprechaun.y + leprechaun.velY;
+
+                lepX = Math.max(0, Math.min(lepX, config.canvasWidth - leprechaun.width));
+                lepY = Math.max(0, Math.min(lepY, config.canvasHeight - leprechaun.height));
+
+                let canMoveLep = true;
+                for (let tree of trees) {
+                    if (checkCollision({...leprechaun, x: lepX, y: lepY}, tree)) {
+                        canMoveLep = false;
+                        break;
                     }
-                });
+                }
+
+                if (canMoveLep) {
+                    leprechaun.x = lepX;
+                    leprechaun.y = lepY;
+                }
+
+                // Check if player found leprechaun
+                if (checkCollision(player, leprechaun)) {
+                    gameState.found = true;
+                    playMeetSound();
+                    document.getElementById('statusText').textContent = '✨ Следуй за леприконом к золоту! ✨';
+                }
+            } else {
+                // Leprechaun leads to barrel
+                const dx = barrel.x - leprechaun.x;
+                const dy = barrel.y - leprechaun.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance > 5) {
+                    leprechaun.velX = (dx / distance) * config.leprechaunSpeed;
+                    leprechaun.velY = (dy / distance) * config.leprechaunSpeed;
+                    leprechaun.x += leprechaun.velX;
+                    leprechaun.y += leprechaun.velY;
+                }
+
+                // Check if player reached barrel
+                if (checkCollision(player, barrel)) {
+                    playWinSound();
+                    gameState.screen = 'win';
+                    document.getElementById('gameScreen').classList.remove('active');
+                    document.getElementById('winScreen').classList.add('active');
+                }
+            }
         }
-        
-        function resetGame() {
-            fetch('/api/snake/reset', {method: 'POST'})
-                .then(response => response.json())
-                .then(state => {
-                    gameState = state;
-                    drawGame();
-                    updateUI();
-                    if (!state.gameOver) {
-                        setTimeout(updateGame, 150);
-                    }
-                });
-        }
-        
-        function drawGame() {
-            // Очищаем canvas
-            ctx.fillStyle = '#1a1a1a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Рисуем сетку
-            ctx.strokeStyle = '#2c3e50';
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i <= GRID_SIZE; i++) {
+
+        // Draw game
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = gameState.colors.grass;
+            ctx.fillRect(0, 0, config.canvasWidth, config.canvasHeight);
+
+            // Draw grid background
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < config.canvasWidth; i += 50) {
                 ctx.beginPath();
-                ctx.moveTo(i * CELL_SIZE, 0);
-                ctx.lineTo(i * CELL_SIZE, canvas.height);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.moveTo(0, i * CELL_SIZE);
-                ctx.lineTo(canvas.width, i * CELL_SIZE);
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, config.canvasHeight);
                 ctx.stroke();
             }
-            
-            // Рисуем еду
-            ctx.fillStyle = '#e74c3c';
+            for (let i = 0; i < config.canvasHeight; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(config.canvasWidth, i);
+                ctx.stroke();
+            }
+
+            // Draw trees
+            ctx.fillStyle = gameState.colors.trees;
+            for (let tree of trees) {
+                ctx.fillRect(tree.x, tree.y, tree.width, tree.height);
+                ctx.fillStyle = '#228B22';
+                ctx.beginPath();
+                ctx.arc(tree.x + tree.width / 2, tree.y - 10, tree.width / 2 + 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = gameState.colors.trees;
+            }
+
+            // Draw stones
+            ctx.fillStyle = gameState.colors.stones;
+            for (let stone of stones) {
+                ctx.fillRect(stone.x, stone.y, stone.width, stone.height);
+            }
+
+            // Draw barrel
+            ctx.fillStyle = gameState.colors.barrel;
+            ctx.fillRect(barrel.x, barrel.y, barrel.width, barrel.height);
+            ctx.strokeStyle = '#CC8800';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(barrel.x, barrel.y, barrel.width, barrel.height);
+
+            // Draw leprechaun
+            ctx.fillStyle = gameState.colors.leprechaun;
+            ctx.fillRect(leprechaun.x, leprechaun.y, leprechaun.width, leprechaun.height);
+            // Hat
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(leprechaun.x + 5, leprechaun.y - 10, leprechaun.width - 10, 10);
+            ctx.fillStyle = gameState.colors.leprechaun;
+            ctx.fillRect(leprechaun.x + 8, leprechaun.y - 5, leprechaun.width - 16, 5);
+
+            // Draw arrow if found
+            if (gameState.found) {
+                const dx = barrel.x - leprechaun.x;
+                const dy = barrel.y - leprechaun.y;
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(leprechaun.x + leprechaun.width / 2, leprechaun.y + leprechaun.height / 2);
+                ctx.lineTo(leprechaun.x + leprechaun.width / 2 + dx * 0.3, leprechaun.y + leprechaun.height / 2 + dy * 0.3);
+                ctx.stroke();
+            }
+
+            // Draw player
+            ctx.fillStyle = gameState.colors.player;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // Eyes
+            ctx.fillStyle = '#FFFFFF';
             ctx.beginPath();
-            ctx.arc(
-                gameState.food.x * CELL_SIZE + CELL_SIZE/2,
-                gameState.food.y * CELL_SIZE + CELL_SIZE/2,
-                CELL_SIZE/2 - 1, 0, Math.PI * 2
-            );
+            ctx.arc(player.x + 8, player.y + 8, 4, 0, Math.PI * 2);
             ctx.fill();
-            
-            // Рисуем змейку
-            gameState.snake.forEach((segment, index) => {
-                if (index === 0) {
-                    // Голова
-                    ctx.fillStyle = '#27ae60';
-                } else {
-                    // Тело
-                    ctx.fillStyle = '#2ecc71';
-                }
-                
-                ctx.fillRect(
-                    segment.x * CELL_SIZE + 1,
-                    segment.y * CELL_SIZE + 1,
-                    CELL_SIZE - 2,
-                    CELL_SIZE - 2
-                );
-                
-                // Глаза у головы
-                if (index === 0) {
-                    ctx.fillStyle = '#000';
-                    const eyeSize = 3;
-                    const offset = 5;
-                    
-                    // Левый глаз
-                    ctx.beginPath();
-                    ctx.arc(
-                        segment.x * CELL_SIZE + offset,
-                        segment.y * CELL_SIZE + offset,
-                        eyeSize, 0, Math.PI * 2
-                    );
-                    ctx.fill();
-                    
-                    // Правый глаз
-                    ctx.beginPath();
-                    ctx.arc(
-                        (segment.x + 1) * CELL_SIZE - offset,
-                        segment.y * CELL_SIZE + offset,
-                        eyeSize, 0, Math.PI * 2
-                    );
-                    ctx.fill();
-                }
-            });
+            ctx.beginPath();
+            ctx.arc(player.x + 22, player.y + 8, 4, 0, Math.PI * 2);
+            ctx.fill();
+            // Pupils
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(player.x + 8, player.y + 8, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(player.x + 22, player.y + 8, 2, 0, Math.PI * 2);
+            ctx.fill();
         }
-        
-        function updateUI() {
-            document.getElementById('score').textContent = gameState.score;
-            document.getElementById('gameOver').style.display = 
-                gameState.gameOver ? 'block' : 'none';
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
         }
-        
-        // Запуск игры
-        resetGame();
+
+        // Screen management
+        function startGame() {
+            gameState.screen = 'game';
+            gameState.found = false;
+            player.x = 100;
+            player.y = 300;
+            leprechaun.x = 800;
+            leprechaun.y = 300;
+            initObstacles();
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('statusText').textContent = 'Ищем леприкона...';
+        }
+
+        function goToStart() {
+            gameState.screen = 'start';
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('startScreen').classList.add('active');
+        }
+
+        function resetGame() {
+            startGame();
+        }
+
+        // Zoom
+        function changeZoom(delta) {
+            gameState.zoom = Math.max(0.5, Math.min(2, gameState.zoom + delta));
+            setZoom(gameState.zoom);
+        }
+
+        function setZoom(value) {
+            gameState.zoom = parseFloat(value);
+            canvas.style.transform = `scale(${gameState.zoom})`;
+            canvas.style.transformOrigin = 'top center';
+            document.getElementById('zoomValue').textContent = gameState.zoom.toFixed(1) + 'x';
+        }
+
+        // Colors
+        function updateColor(element) {
+            const colorMap = {
+                'player': 'colorPlayer',
+                'leprechaun': 'colorLeprechaun',
+                'trees': 'colorTrees',
+                'grass': 'colorGrass',
+                'barrel': 'colorBarrel'
+            };
+            gameState.colors[element] = document.getElementById(colorMap[element]).value;
+        }
+
+        function resetColors() {
+            gameState.colors = {
+                player: '#3366FF',
+                leprechaun: '#22DD44',
+                trees: '#8B4513',
+                grass: '#00AA00',
+                barrel: '#FFD700',
+                stones: '#888888'
+            };
+            document.getElementById('colorPlayer').value = gameState.colors.player;
+            document.getElementById('colorLeprechaun').value = gameState.colors.leprechaun;
+            document.getElementById('colorTrees').value = gameState.colors.trees;
+            document.getElementById('colorGrass').value = gameState.colors.grass;
+            document.getElementById('colorBarrel').value = gameState.colors.barrel;
+        }
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', e => e.waitUntil(self.skipWaiting()));
+                self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+                self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => new Response('Offline'))));
+            `;
+            const blob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(() => {});
+        }
+
+        // Start game loop
+        gameLoop();
+        initObstacles();
     </script>
 </body>
 </html>
