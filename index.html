@@ -1,1965 +1,2025 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <title>Страшный лес</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f17" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <style>
-        :root {
-            --color-bg-forest: #0a0a0a;
-            --color-accent: #dc2626;
-            --color-player: #3b82f6;
-            --color-enemy: #ff5459;
-            --color-enemy-fast: #3b82f6;
-            --color-boss: #8b0000;
-            --color-text: #ffffff;
-            --color-ui-bg: rgba(0, 0, 0, 0.85);
-            --color-coin: #fbbf24;
-            --color-shop: #16a34a;
-        }
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <title>P2P Chat (WebRTC) — группы + E2EE + QR + signaling</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:#0b0f17;
+      color:#e7eefc;
+    }
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding:
+        calc(16px + env(safe-area-inset-top))
+        calc(16px + env(safe-area-inset-right))
+        calc(16px + env(safe-area-inset-bottom))
+        calc(16px + env(safe-area-inset-left));
+      display: grid;
+      gap: 14px;
+    }
+    h1 { font-size: 18px; margin: 8px 0 0; }
+    .grid { display:grid; grid-template-columns: 1.1fr .9fr; gap: 12px; }
+    @media (max-width: 980px){ .grid { grid-template-columns: 1fr; } }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-            background: var(--color-bg-forest);
-            color: var(--color-text);
-            overflow: hidden;
-            touch-action: none;
-        }
+    .card { background:#121a28; border:1px solid #1f2a3e; border-radius: 14px; padding: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+    label { display:block; font-size: 12px; opacity:.85; margin: 6px 0; }
 
-        /* Общие экраны */
-        #menuScreen,
-        #gameScreen,
-        #instructionsScreen,
-        #aboutScreen,
-        #shopScreen {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
+    textarea, input, select {
+      width:100%; box-sizing:border-box;
+      border-radius: 12px; border:1px solid #24334d;
+      background:#0c1422; color:#e7eefc;
+      padding: 10px;
+      outline:none;
+    }
+    textarea {
+      min-height: 124px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+    }
 
-        /* Меню */
-        #menuScreen {
-            background: radial-gradient(circle at 20% 20%, #111 0, #000 40%, #000 100%);
-            flex-direction: column;
-        }
+    /* iOS Safari: prevent zoom on focus */
+    @media (max-width: 980px){
+      input, textarea, select { font-size: 16px; }
+      textarea { font-size: 14px; }
+    }
 
-        .logo {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #dc2626, #000);
-            background-size: cover;
-            background-position: center;
-            box-shadow: 0 20px 40px rgba(220, 38, 38, 0.3);
-            margin-bottom: 40px;
-            animation: float 3s ease-in-out infinite;
-            position: relative;
-            overflow: hidden;
-        }
+    .row { display:flex; gap:10px; flex-wrap: wrap; align-items: center; }
 
-        .logo::before {
-            content: "🌲";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 80px;
-        }
+    button {
+      border: 0; border-radius: 12px;
+      padding: 10px 12px;
+      background:#2b67ff;
+      color:white;
+      cursor:pointer;
+      font-weight:700;
+    }
+    button.secondary { background:#22304a; font-weight:650; }
+    button.danger { background:#ff3b5c; font-weight:700; }
+    button:disabled { opacity: .55; cursor:not-allowed; }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
+    .statusLine { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content: space-between; }
+    .pill { font-size: 12px; opacity: .95; padding: 6px 10px; border-radius: 999px; border:1px solid #24334d; background:#0c1422; }
+    .pill.ok { border-color:#2a4a8f; background:#0d1c38; }
+    .pill.bad { border-color:#7a2031; background:#230a10; }
 
-        .menu-button {
-            width: 260px;
-            padding: 14px 24px;
-            margin: 8px;
-            border-radius: 14px;
-            border: none;
-            background: var(--color-accent);
-            color: var(--color-text);
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);
-            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-        }
+    .help { font-size: 12px; opacity: .86; line-height: 1.35; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .hr { height:1px; background:#1f2a3e; margin: 10px 0; }
+    .smallbtn { padding: 8px 10px; border-radius: 10px; font-weight:650; }
 
-        .menu-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 16px 40px rgba(220, 38, 38, 0.5);
-            background: #b91c1c;
-        }
+    .chat { height: 340px; overflow:auto; background:#0c1422; border:1px solid #24334d; border-radius: 14px; padding: 10px; }
+    .msg { margin: 8px 0; display:flex; }
+    .bubble {
+      max-width: 88%;
+      padding: 8px 10px;
+      border-radius: 14px;
+      border:1px solid #24334d;
+      background:#0f1b30;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .me { justify-content: flex-end; }
+    .me .bubble { background:#173060; border-color:#2a4a8f; }
+    .sys { justify-content: center; }
+    .sys .bubble { background:#101827; opacity:.92; font-size:12px; }
 
-        .menu-button:active {
-            transform: translateY(0);
-            box-shadow: 0 8px 18px rgba(220, 38, 38, 0.3);
-        }
+    .kv { display:grid; grid-template-columns: 170px 1fr; gap: 6px 10px; font-size: 12px; opacity:.9; }
 
-        /* Текстовые экраны */
-        .content-box {
-            background: var(--color-ui-bg);
-            padding: 26px;
-            border-radius: 16px;
-            max-width: 620px;
-            max-height: 80vh;
-            overflow-y: auto;
-            margin: 20px;
-            border: 2px solid var(--color-accent);
-        }
+    /* Participants */
+    .plist {
+      max-height: 220px;
+      overflow: auto;
+      border:1px solid #24334d;
+      border-radius: 14px;
+      background:#0c1422;
+      padding: 8px;
+    }
+    .prow { display:flex; gap:10px; align-items:flex-start; padding: 8px 6px; border-bottom:1px solid rgba(36,51,77,.6); }
+    .prow:last-child { border-bottom:0; }
+    .dot { width:10px; height:10px; border-radius:999px; margin-top: 4px; flex: 0 0 10px; background:#6b7280; }
+    .dot.ok { background:#22c55e; }
+    .dot.warn { background:#f59e0b; }
+    .dot.bad { background:#ef4444; }
+    .pname { font-weight: 700; font-size: 13px; line-height: 1.2; }
+    .pmeta { font-size: 12px; opacity: .82; line-height: 1.25; }
+    .pmeta .mono { font-size: 11px; }
+    .pactions { display:flex; gap:8px; align-items:center; }
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 999px; border:1px solid #24334d; background:#0f1b30; opacity:.9; }
+    .tag.bad { border-color:#7a2031; background:#230a10; }
+    .tag.ok { border-color:#2a4a8f; background:#0d1c38; }
 
-        .content-box h2 {
-            color: var(--color-accent);
-            margin-bottom: 14px;
-            font-size: 24px;
-        }
+    canvas.qr { width: 220px; height: 220px; border-radius: 14px; border:1px solid #24334d; background:white; }
+    .two { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 980px){ .two { grid-template-columns: 1fr; } }
 
-        .content-box p {
-            margin-bottom: 10px;
-            line-height: 1.6;
-            font-size: 15px;
-        }
+    .muted { opacity:.78; }
+    .warn { color: #ffd28a; }
+    .good { color: #a6ffcc; }
+    .bad { color: #ff9aa9; }
 
-        .back-button {
-            position: fixed;
-            top: 16px;
-            left: 16px;
-            padding: 10px 18px;
-            border-radius: 10px;
-            border: none;
-            background: var(--color-accent);
-            color: var(--color-text);
-            font-size: 15px;
-            cursor: pointer;
-            z-index: 10;
-        }
+    video { width: 100%; border-radius: 14px; border:1px solid #24334d; background:#0c1422; }
 
-        /* Игра */
-        #gameScreen {
-            background: #000;
-        }
-
-        #gameCanvas {
-            display: block;
-            width: 100vw;
-            height: 100vh;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
-
-        .ui-panel {
-            position: fixed;
-            top: 14px;
-            left: 14px;
-            background: var(--color-ui-bg);
-            padding: 12px 14px;
-            border-radius: 12px;
-            font-size: 13px;
-            line-height: 1.5;
-            z-index: 10;
-            min-width: 190px;
-            border: 2px solid var(--color-accent);
-        }
-
-        .stats-panel {
-            position: fixed;
-            top: 110px;
-            left: 14px;
-            background: var(--color-ui-bg);
-            padding: 12px 14px;
-            border-radius: 12px;
-            font-size: 13px;
-            line-height: 1.5;
-            z-index: 10;
-            min-width: 190px;
-            border: 2px solid var(--color-coin);
-        }
-
-        .minimap {
-            position: fixed;
-            top: 14px;
-            right: 14px;
-            width: 150px;
-            height: 150px;
-            border-radius: 12px;
-            border: 3px solid #808080;
-            background: rgba(128, 128, 128, 0.3);
-            z-index: 10;
-        }
-
-        /* Виртуальный джойстик */
-        .joystick-container {
-            position: fixed;
-            bottom: 40px;
-            left: 36px;
-            width: 120px;
-            height: 120px;
-            display: none;
-            z-index: 20;
-        }
-
-        .joystick-base {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 3px solid var(--color-accent);
-            background: rgba(220, 38, 38, 0.25);
-            position: relative;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
-        }
-
-        .joystick-stick {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: var(--color-accent);
-            border: 3px solid var(--color-text);
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
-            transition: transform 0.08s ease;
-        }
-
-        .attack-button {
-            position: fixed;
-            bottom: 52px;
-            right: 52px;
-            width: 82px;
-            height: 82px;
-            border-radius: 50%;
-            border: 3px solid var(--color-text);
-            background: rgba(220, 38, 38, 0.85);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            z-index: 20;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
-            user-select: none;
-        }
-
-        .attack-button:active {
-            transform: scale(0.95);
-            background: rgba(220, 38, 38, 1);
-        }
-
-        /* Магазин */
-        #shopScreen {
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 30;
-        }
-
-        .shop-container {
-            background: var(--color-ui-bg);
-            padding: 30px;
-            border-radius: 20px;
-            max-width: 800px;
-            max-height: 85vh;
-            overflow-y: auto;
-            border: 3px solid var(--color-shop);
-        }
-
-        .shop-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .shop-title {
-            color: var(--color-shop);
-            font-size: 28px;
-        }
-
-        .shop-coin {
-            color: var(--color-coin);
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .shop-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .shop-item {
-            background: rgba(30, 30, 30, 0.8);
-            border: 2px solid var(--color-accent);
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .shop-item:hover {
-            transform: translateY(-3px);
-            border-color: var(--color-coin);
-        }
-
-        .shop-item.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .shop-item.disabled:hover {
-            transform: none;
-            border-color: var(--color-accent);
-        }
-
-        .item-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .item-name {
-            color: var(--color-text);
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .item-price {
-            color: var(--color-coin);
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .item-description {
-            color: #ccc;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .item-stats {
-            color: #aaa;
-            font-size: 12px;
-            font-style: italic;
-        }
-
-        /* Game over */
-        .game-over-screen {
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 30;
-        }
-
-        .game-over-screen h1 {
-            font-size: 40px;
-            color: var(--color-accent);
-            margin-bottom: 14px;
-        }
-
-        .game-over-screen p {
-            margin: 4px 0;
-            font-size: 16px;
-        }
-
-        /* Загрузочный экран */
-        #loadingScreen {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            z-index: 50;
-            cursor: pointer;
-        }
-
-        #loadingTitle {
-            color: #dc2626;
-            font-size: 44px;
-            font-weight: 700;
-            letter-spacing: 0.24em;
-            text-align: center;
-            text-transform: uppercase;
-            text-shadow: 0 0 20px rgba(220, 38, 38, 0.7);
-        }
-
-        #loadingTitle span {
-            display: inline-block;
-            animation: blink-letter 1.4s infinite ease-in-out;
-        }
-
-        @keyframes blink-letter {
-            0%   { opacity: 0.2; transform: translateY(0); }
-            40%  { opacity: 1;   transform: translateY(-4px); text-shadow: 0 0 25px rgba(220, 38, 38, 1); }
-            100% { opacity: 0.2; transform: translateY(0); }
-        }
-
-        .loading-hint {
-            margin-top: 26px;
-            font-size: 14px;
-            color: #dc2626;
-            opacity: 0.8;
-        }
-
-        .fade-out {
-            animation: fadeOut 0.5s forwards ease-in-out;
-        }
-
-        @keyframes fadeOut {
-            to { opacity: 0; pointer-events: none; }
-        }
-
-        /* Адаптация */
-        @media (max-width: 600px) {
-            .ui-panel {
-                font-size: 12px;
-                min-width: 170px;
-            }
-            .stats-panel {
-                top: 96px;
-                min-width: 170px;
-            }
-            .minimap {
-                width: 120px;
-                height: 120px;
-            }
-            .shop-items {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    .inlineIcon { display:inline-block; transform: translateY(1px); }
+  </style>
 </head>
 <body>
-    <!-- Загрузочный экран -->
-    <div id="loadingScreen">
-        <h1 id="loadingTitle">СТРАШНЫЙ ЛЕС</h1>
-        <div class="loading-hint">Нажми / тапни, чтобы продолжить</div>
+  <div class="wrap">
+    <h1>🔗 P2P Chat (WebRTC DataChannel) — группы + 🔒E2EE + QR + Cloudflare сигналинг</h1>
+    <div class="help">
+      <b>Основной сценарий для GitHub Pages (Android/iPhone):</b> используйте <b>режим комнаты</b> (Cloudflare сигналинг). Он нужен только для обмена сигналами WebRTC.
+      Сообщения чата идут <b>напрямую P2P</b>.
+      <br/><span class="warn">Важно:</span> в некоторых сетях WebRTC может не пробить NAT без TURN — тогда заполните блок STUN/TURN.
     </div>
 
-    <!-- Главное меню -->
-    <div id="menuScreen">
-        <div class="logo"></div>
-        <button class="menu-button" onclick="startGame()">НАЧНЁМ</button>
-        <button class="menu-button" onclick="showInstructions()">КАК ИГРАТЬ</button>
-        <button class="menu-button" onclick="showAbout()">ОБ ИГРЕ</button>
-    </div>
-
-    <!-- Экран инструкций -->
-    <div id="instructionsScreen">
-        <button class="back-button" onclick="showMenu()">← Назад</button>
-        <div class="content-box">
-            <h2>🌲 Как играть</h2>
-            <p><strong>Цель:</strong> Выживай как можно дольше и собирай монеты!</p>
-            <p><strong>Особенности:</strong></p>
-            <p>• Собирай монеты для покупок в магазине</p>
-            <p>• Каждые 5 волн появляется босс (сильнее предыдущего)</p>
-            <p>• Монстры становятся быстрее и сильнее с каждой волной</p>
-            <p>• Монстры могут ходить сквозь стены!</p>
-            <p>• Игрок НЕ проходит через стены</p>
-            <p>• Баффы действуют ВЕЧНО (до конца игры)</p>
-            <p><strong>Награды:</strong></p>
-            <p>• Обычные монстры: 5 монет</p>
-            <p>• Быстрые монстры: 5 монет</p>
-            <p>• Босс: 50 монет</p>
-            <p><strong>Управление на ПК:</strong></p>
-            <p>W, A, S, D или стрелки — движение</p>
-            <p>Правый клик мыши — выстрел</p>
-            <p>B — открыть магазин</p>
-            <p><strong>Управление на телефоне:</strong></p>
-            <p>🕹️ Джойстик — движение</p>
-            <p>💀 Кнопка — атака</p>
-            <p><strong>Магазин (B):</strong></p>
-            <p>• Оружие — увеличивает урон (покупается 1 раз)</p>
-            <p>• Скорость — увеличивает скорость движения (складывается)</p>
-            <p>• Здоровье — увеличивает максимальное здоровье (складывается)</p>
-            <p>• Баффы — вечные усиления (действуют всю игру)</p>
-        </div>
-    </div>
-
-    <!-- Экран об игре -->
-    <div id="aboutScreen">
-        <button class="back-button" onclick="showMenu()">← Назад</button>
-        <div class="content-box">
-            <h2>🌲 Об игре</h2>
-            <p><strong>СТРАШНЫЙ ЛЕС</strong></p>
-            <p>2D-игра сверху в стиле survival с элементами roguelike.</p>
-            <p>Особенности:</p>
-            <p>• Система монет вместо опыта</p>
-            <p>• Магазин с оружием и баффами</p>
-            <p>• Монстры проходят сквозь стены</p>
-            <p>• Игрок НЕ проходит сквозь стены</p>
-            <p>• Боссы каждые 5 волн (становятся сильнее)</p>
-            <p>• Увеличение сложности с каждой волной</p>
-            <p>• Баффы действуют вечно</p>
-            <p>• Серый стиль миникарты</p>
-            <p><strong>Выживи как можно дольше и стань богаче!</strong></p>
-        </div>
-    </div>
-
-    <!-- Экран игры -->
-    <div id="gameScreen">
-        <canvas id="gameCanvas"></canvas>
-
-        <div class="ui-panel">
-            <div>❤️ Здоровье: <span id="healthText">100</span>/<span id="maxHealthText">100</span></div>
-            <div>⏱️ Время: <span id="timeText">0</span>с</div>
-            <div>💀 Волна: <span id="waveText">1</span></div>
+    <div class="grid">
+      <div class="card">
+        <div class="statusLine">
+          <div class="row">
+            <span class="pill" id="pillPeers">Peers: 0</span>
+            <span class="pill" id="pillDC">DC: 0</span>
+            <span class="pill" id="pillICE">ICE: idle</span>
+            <span class="pill" id="pillWS">WS: off</span>
+            <span class="pill" id="pillE2EE">E2EE: off</span>
+          </div>
+          <div class="row">
+            <button id="btnReset" class="danger smallbtn" title="Закрыть соединения и очистить поля">Сброс</button>
+          </div>
         </div>
 
-        <div class="stats-panel">
-            <div>💰 Монеты: <span id="coinText">0</span></div>
-            <div>🎯 Урон: <span id="damageText">20</span></div>
-            <div>🏃 Скорость: <span id="speedText">220</span></div>
-            <div>🔫 Оружие: <span id="weaponText">Базовая</span></div>
-            <div>📦 Магазин: B</div>
-        </div>
+        <div class="hr"></div>
 
-        <canvas id="minimapCanvas" class="minimap" width="150" height="150"></canvas>
-
-        <!-- Виртуальный джойстик -->
-        <div class="joystick-container" id="joystickContainer">
-            <div class="joystick-base">
-                <div class="joystick-stick" id="joystickStick"></div>
+        <div class="row">
+          <div style="flex:1 1 260px;">
+            <label>Ваше имя (видят другие, хранится локально)</label>
+            <input id="name" placeholder="Например: Maxim" />
+          </div>
+          <div style="flex:1 1 260px;">
+            <label>Пароль комнаты (E2EE) — не отправляется на сервер</label>
+            <div class="row" style="gap:8px;">
+              <input id="e2eePass" type="password" placeholder="(необязательно)" autocomplete="off" style="flex:1 1 auto;" />
+              <button id="btnTogglePass" class="secondary smallbtn" type="button" title="Показать/скрыть пароль">👁️</button>
             </div>
+            <div class="help muted">Если пароль разный — сообщения не расшифруются (увидите ошибку). Менять пароль во время чата не рекомендуется.</div>
+          </div>
         </div>
 
-        <!-- Кнопка атаки -->
-        <div class="attack-button" id="attackButton">💀</div>
-    </div>
+        <details style="margin-top:10px;" open>
+          <summary class="help"><b>Режим B (рекомендуется): комната (Cloudflare сигналинг) — групповой чат</b></summary>
+          <div class="hr"></div>
 
-    <!-- Магазин -->
-    <div id="shopScreen">
-        <div class="shop-container">
-            <div class="shop-header">
-                <h2 class="shop-title">🏪 МАГАЗИН</h2>
-                <div class="shop-coin">💰 <span id="shopCoinText">0</span></div>
+          <div class="row">
+            <div style="flex:1 1 360px;">
+              <label>URL WebSocket сигналинга (пример: <span class="mono">wss://YOUR-WORKER.workers.dev/ws</span>)</label>
+              <input id="wsUrl" placeholder="wss://YOUR-WORKER.workers.dev/ws" />
             </div>
-            <button class="back-button" onclick="closeShop()">← Назад в игру</button>
-            
-            <div class="shop-items">
-                <!-- Оружие -->
-                <div class="shop-item" onclick="buyItem('pistol')" id="pistolItem">
-                    <div class="item-header">
-                        <div class="item-name">🔫 Пистолет</div>
-                        <div class="item-price">50💰</div>
-                    </div>
-                    <div class="item-description">Базовая точность, средний урон</div>
-                    <div class="item-stats">Урон: 25 | Скорострельность: 0.4с</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('shotgun')" id="shotgunItem">
-                    <div class="item-header">
-                        <div class="item-name">🔫 Дробовик</div>
-                        <div class="item-price">120💰</div>
-                    </div>
-                    <div class="item-description">Разбросный выстрел, высокий урон вблизи</div>
-                    <div class="item-stats">Урон: 40 (x3) | Скорострельность: 0.8с</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('machinegun')" id="machinegunItem">
-                    <div class="item-header">
-                        <div class="item-name">🔫 Пулемёт</div>
-                        <div class="item-price">200💰</div>
-                    </div>
-                    <div class="item-description">Быстрая стрельба, низкий урон за выстрел</div>
-                    <div class="item-stats">Урон: 15 | Скорострельность: 0.15с</div>
-                </div>
-
-                <!-- Улучшения -->
-                <div class="shop-item" onclick="buyItem('speed')" id="speedItem">
-                    <div class="item-header">
-                        <div class="item-name">🏃 Скорость</div>
-                        <div class="item-price">80💰</div>
-                    </div>
-                    <div class="item-description">Увеличивает скорость движения</div>
-                    <div class="item-stats">+20% скорости (складывается)</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('health')" id="healthItem">
-                    <div class="item-header">
-                        <div class="item-name">❤️ Здоровье</div>
-                        <div class="item-price">100💰</div>
-                    </div>
-                    <div class="item-description">Увеличивает максимальное здоровье</div>
-                    <div class="item-stats">+50 здоровья (складывается)</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('regen')" id="regenItem">
-                    <div class="item-header">
-                        <div class="item-name">🔄 Регенерация</div>
-                        <div class="item-price">150💰</div>
-                    </div>
-                    <div class="item-description">Медленно восстанавливает здоровье</div>
-                    <div class="item-stats">+5 HP/сек (складывается)</div>
-                </div>
-
-                <!-- Баффы (вечные) -->
-                <div class="shop-item" onclick="buyItem('damageBuff')" id="damageBuffItem">
-                    <div class="item-header">
-                        <div class="item-name">⚡ Урон+</div>
-                        <div class="item-price">60💰</div>
-                    </div>
-                    <div class="item-description">Вечно увеличивает урон на 50%</div>
-                    <div class="item-stats">Действует всю игру</div>
-                </div>
-
-                <div class="shop-item" onclick="buyItem('speedBuff')" id="speedBuffItem">
-                    <div class="item-header">
-                        <div class="item-name">⚡ Скорость+</div>
-                        <div class="item-price">60💰</div>
-                    </div>
-                    <div class="item-description">Вечно увеличивает скорость на 40%</div>
-                    <div class="item-stats">Действует всю игру</div>
-                </div>
+            <div style="flex:1 1 180px;">
+              <label>Комната</label>
+              <input id="room" placeholder="например: 7Q2K9B" />
             </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <button id="btnRoomNew">Создать комнату</button>
+            <button id="btnWsConnect" class="secondary">Подключиться</button>
+            <button id="btnWsDisconnect" class="secondary" disabled>Отключиться</button>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div style="flex:1 1 520px;">
+              <label>Ссылка‑приглашение (её можно отправить или закодировать в QR)</label>
+              <input id="inviteLink" readonly class="mono" placeholder="(создайте комнату или заполните поля выше)" />
+            </div>
+            <div class="row" style="align-items:flex-end;">
+              <button id="btnCopyInvite" class="secondary smallbtn">Копировать</button>
+              <button id="btnShareInvite" class="secondary smallbtn">Поделиться</button>
+              <button id="btnMakeRoomQr" class="secondary smallbtn">QR</button>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px; align-items:flex-start;">
+            <canvas class="qr" id="qrRoom" width="220" height="220" aria-label="QR комнаты"></canvas>
+            <div class="help muted" style="flex: 1 1 360px;">
+              <div><b>Как работает групповой чат:</b></div>
+              <ol>
+                <li>Подключаетесь к комнате по WS.</li>
+                <li>Новый участник автоматически создаёт P2P‑соединение (WebRTC) с каждым уже подключённым участником (mesh).</li>
+                <li>Сервер пересылает только сигналинг. Сообщения чата не хранятся.</li>
+              </ol>
+              <div class="warn">Скалирование mesh: нагрузка растёт примерно как n² (по числу соединений).</div>
+            </div>
+          </div>
+
+          <div class="two" style="margin-top:10px;">
+            <div>
+              <label style="margin:0;">Сканер QR (вставит ссылку/SDP)</label>
+              <div class="row" style="margin-top:6px;">
+                <button id="btnScanStart" class="secondary smallbtn">Старт</button>
+                <button id="btnScanStop" class="secondary smallbtn" disabled>Стоп</button>
+              </div>
+              <video id="scanVideo" playsinline muted></video>
+              <div class="help muted" style="margin-top:6px;">
+                Камера требует HTTPS или <span class="mono">localhost</span>. На iPhone можно просто сканировать QR системной камерой (QR — это ссылка).
+              </div>
+            </div>
+            <div>
+              <label>Подсказка по E2EE</label>
+              <div class="help muted">
+                🔒 Пароль комнаты <b>не отправляется</b> и <b>не хранится</b> на сервере сигналинга.
+                Передайте пароль второму человеку отдельным каналом.
+                <br/>Рекомендация: договориться о пароле заранее.
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details style="margin-top:10px;">
+          <summary class="help"><b>Режим A (1-на-1): без сервера — copy/paste или QR Offer/Answer</b></summary>
+          <div class="hr"></div>
+
+          <div class="row">
+            <button id="btnCreateOffer">Создать Offer</button>
+            <button id="btnApplyRemote" class="secondary" title="Вставьте Offer/Answer ниже и нажмите">Принять вставленное (Offer/Answer)</button>
+            <button id="btnCopyLocal" class="secondary">Скопировать моё (Offer/Answer)</button>
+          </div>
+
+          <label style="margin-top:10px;">Моё (Offer/Answer) — скопируйте и отправьте</label>
+          <textarea id="localSdp" placeholder="Тут появится Offer или Answer"></textarea>
+
+          <label style="margin-top:10px;">Вставьте сюда то, что прислал другой человек (Offer/Answer)</label>
+          <textarea id="remoteSdp" placeholder="Вставьте JSON (Offer/Answer) сюда"></textarea>
+
+          <div class="row" style="margin-top:10px; align-items:flex-start;">
+            <div style="flex: 1 1 320px;">
+              <div class="row" style="justify-content: space-between;">
+                <label style="margin:0;">QR моего Offer/Answer</label>
+                <button id="btnMakeSdpQr" class="secondary smallbtn">Обновить QR</button>
+              </div>
+              <canvas class="qr" id="qrSdp" width="220" height="220" aria-label="QR локального Offer/Answer"></canvas>
+              <div class="help muted" style="margin-top:6px;">
+                QR кодирует Offer/Answer. Если QR слишком плотный — используйте copy/paste или режим комнаты.
+              </div>
+            </div>
+            <div class="help muted" style="flex: 1 1 360px;">
+              <b>Ограничения режима A:</b>
+              <ul>
+                <li>Только 1-на-1.</li>
+                <li>Оба должны быть онлайн во время обмена Offer/Answer.</li>
+                <li>В некоторых сетях без TURN может не соединиться.</li>
+              </ul>
+            </div>
+          </div>
+        </details>
+
+        <details style="margin-top:10px;">
+          <summary class="help"><b>Сеть (STUN / TURN) — опционально</b></summary>
+          <div class="hr"></div>
+          <div class="help muted">
+            <b>Когда нужно:</b> если часто видите <span class="mono">ICE: failed</span> или соединение не устанавливается.
+            TURN — это ретранслятор (сервер), который повышает шанс соединения.
+            <span class="warn">Изменения применятся после «Сброс».</span>
+          </div>
+
+          <div class="two" style="margin-top:10px;">
+            <div>
+              <label>STUN URLs (по одной на строку или через запятую)</label>
+              <textarea id="stunUrls" placeholder="stun:stun.l.google.com:19302\nstun:stun1.l.google.com:19302"></textarea>
+              <div class="help muted">Обычно достаточно 1–2 STUN.</div>
+            </div>
+            <div>
+              <label>TURN URLs (по одной на строку или через запятую)</label>
+              <textarea id="turnUrls" placeholder="turn:turn.example.com:3478?transport=udp\nturns:turn.example.com:5349?transport=tcp"></textarea>
+              <div class="help muted">Если TURN не нужен — оставьте пустым.</div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div style="flex:1 1 240px;">
+              <label>TURN username</label>
+              <input id="turnUser" placeholder="username" />
+            </div>
+            <div style="flex:1 1 240px;">
+              <label>TURN password</label>
+              <input id="turnPass" type="password" placeholder="password" autocomplete="off" />
+              <div class="help muted">Пароль лучше не хранить. Можно включить сохранение ниже (на свой риск).</div>
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div style="flex:1 1 260px;">
+              <label>ICE transport policy</label>
+              <select id="icePolicy">
+                <option value="all">all (обычно)</option>
+                <option value="relay">relay (только TURN)</option>
+              </select>
+            </div>
+            <div style="flex: 1 1 260px;">
+              <label>Сохранить TURN пароль локально</label>
+              <select id="turnSave">
+                <option value="0">Нет</option>
+                <option value="1">Да</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details style="margin-top:10px;">
+          <summary class="help">Диагностика</summary>
+          <div class="hr"></div>
+          <div class="kv">
+            <div>selfId (room)</div><div class="mono" id="dgSelf">—</div>
+            <div>room</div><div class="mono" id="dgRoom">—</div>
+            <div>peers total</div><div class="mono" id="dgPeers">—</div>
+            <div>datachannels open</div><div class="mono" id="dgDcs">—</div>
+            <div>ws</div><div class="mono" id="dgWS">—</div>
+            <div>e2ee</div><div class="mono" id="dgE2EE">—</div>
+          </div>
+          <div class="hr"></div>
+          <div class="help">
+            Если долго висит на <span class="mono">ICE: checking</span> или появляется <span class="mono">ICE: failed</span> — почти всегда NAT/файрвол.
+            Тогда нужен TURN или другая сеть.
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content: space-between; align-items:center;">
+          <div>
+            <b>Участники</b> <span class="muted" id="participantsCount">(0)</span>
+          </div>
+          <div class="pactions">
+            <button id="btnCopyRoomInfo" class="secondary smallbtn" title="Скопировать room + мой shortId (без пароля)">Скопировать</button>
+          </div>
         </div>
+        <div class="help muted" style="margin-top:6px;">
+          Статусы показывают <b>вашу</b> связь с каждым участником (DC/ICE/RTC). В mesh у всех должно быть соединение со всеми, но иногда нужны TURN/повтор.
+        </div>
+        <div class="plist" id="participantsList" style="margin-top:8px;"></div>
+
+        <div class="hr"></div>
+        <div class="chat" id="chat"></div>
+        <div class="row" style="margin-top:10px;">
+          <input id="msg" placeholder="Напишите сообщение..." />
+          <button id="btnSend" disabled>Отправить</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button id="btnPing" class="secondary" disabled>Ping</button>
+          <button id="btnClearChat" class="secondary">Очистить чат</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Экран завершения -->
-    <div class="game-over-screen" id="gameOverScreen">
-        <h1 id="gameOverTitle">ВЫ ПРОИГРАЛИ!</h1>
-        <p>⏱️ Время выживания: <span id="finalTime">0</span>с</p>
-        <p>💀 Достигнутая волна: <span id="finalWave">1</span></p>
-        <p>💰 Собрано монет: <span id="finalCoins">0</span></p>
-        <p>🔫 Оружие: <span id="finalWeapon">Базовая</span></p>
-        <button class="menu-button" style="margin-top: 20px;" onclick="showMenu()">В меню</button>
-    </div>
+  <!-- QR generator library (Project Nayuki, MIT) compiled from typescript-javascript/qrcodegen.ts -->
+  <script src="./qrcodegen.js"></script>
 
-    <script>
-        // ---------- Определение типа устройства ----------
-        const isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
 
-        // ---------- Работа загрузочного экрана ----------
-        window.addEventListener("load", () => {
-            const loadingScreen = document.getElementById("loadingScreen");
-            const loadingTitle = document.getElementById("loadingTitle");
+  const ui = {
+    pillPeers: $("pillPeers"),
+    pillDC: $("pillDC"),
+    pillICE: $("pillICE"),
+    pillWS: $("pillWS"),
+    pillE2EE: $("pillE2EE"),
 
-            const text = loadingTitle.textContent;
-            loadingTitle.textContent = "";
-            for (let i = 0; i < text.length; i++) {
-                const span = document.createElement("span");
-                span.textContent = text[i];
-                span.style.animationDelay = (i * 0.08) + "s";
-                loadingTitle.appendChild(span);
-            }
+    btnReset: $("btnReset"),
 
-            function proceed() {
-                loadingScreen.classList.add("fade-out");
-                setTimeout(() => {
-                    loadingScreen.style.display = "none";
-                    showMenu();
-                }, 500);
-            }
+    name: $("name"),
+    e2eePass: $("e2eePass"),
+    btnTogglePass: $("btnTogglePass"),
 
-            loadingScreen.addEventListener("click", proceed);
-            loadingScreen.addEventListener("touchstart", (e) => {
-                e.preventDefault();
-                proceed();
-            }, { passive: false });
+    wsUrl: $("wsUrl"),
+    room: $("room"),
+    btnRoomNew: $("btnRoomNew"),
+    btnWsConnect: $("btnWsConnect"),
+    btnWsDisconnect: $("btnWsDisconnect"),
 
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                    proceed();
-                }
-            });
-        });
+    inviteLink: $("inviteLink"),
+    btnCopyInvite: $("btnCopyInvite"),
+    btnShareInvite: $("btnShareInvite"),
+    btnMakeRoomQr: $("btnMakeRoomQr"),
+    qrRoom: $("qrRoom"),
 
-        // ---------- Навигация по экранам ----------
-        function hideAllScreens() {
-            document.getElementById("menuScreen").style.display = "none";
-            document.getElementById("gameScreen").style.display = "none";
-            document.getElementById("instructionsScreen").style.display = "none";
-            document.getElementById("aboutScreen").style.display = "none";
-            document.getElementById("shopScreen").style.display = "none";
-            document.getElementById("gameOverScreen").style.display = "none";
+    scanVideo: $("scanVideo"),
+    btnScanStart: $("btnScanStart"),
+    btnScanStop: $("btnScanStop"),
+
+    btnCreateOffer: $("btnCreateOffer"),
+    btnApplyRemote: $("btnApplyRemote"),
+    btnCopyLocal: $("btnCopyLocal"),
+    localSdp: $("localSdp"),
+    remoteSdp: $("remoteSdp"),
+    qrSdp: $("qrSdp"),
+    btnMakeSdpQr: $("btnMakeSdpQr"),
+
+    stunUrls: $("stunUrls"),
+    turnUrls: $("turnUrls"),
+    turnUser: $("turnUser"),
+    turnPass: $("turnPass"),
+    icePolicy: $("icePolicy"),
+    turnSave: $("turnSave"),
+
+    dgSelf: $("dgSelf"),
+    dgRoom: $("dgRoom"),
+    dgPeers: $("dgPeers"),
+    dgDcs: $("dgDcs"),
+    dgWS: $("dgWS"),
+    dgE2EE: $("dgE2EE"),
+
+    chat: $("chat"),
+    msg: $("msg"),
+    btnSend: $("btnSend"),
+    btnPing: $("btnPing"),
+    btnClearChat: $("btnClearChat"),
+
+    participantsCount: $("participantsCount"),
+    participantsList: $("participantsList"),
+    btnCopyRoomInfo: $("btnCopyRoomInfo"),
+  };
+
+  // --------------------------
+  // Local storage
+  // --------------------------
+  const LS = {
+    name: "p2p_v3_name",
+    wsUrl: "p2p_v3_ws",
+    room: "p2p_v3_room",
+    stunUrls: "p2p_v3_stun",
+    turnUrls: "p2p_v3_turn",
+    turnUser: "p2p_v3_turn_user",
+    turnPass: "p2p_v3_turn_pass",
+    turnSave: "p2p_v3_turn_save",
+    icePolicy: "p2p_v3_ice_policy",
+  };
+
+  function lsGet(k, d="") { try { return localStorage.getItem(k) ?? d; } catch { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
+
+  ui.name.value = lsGet(LS.name, "");
+  ui.wsUrl.value = lsGet(LS.wsUrl, "");
+  ui.room.value = lsGet(LS.room, "");
+
+  ui.stunUrls.value = lsGet(LS.stunUrls, "stun:stun.l.google.com:19302, stun:stun1.l.google.com:19302");
+  ui.turnUrls.value = lsGet(LS.turnUrls, "");
+  ui.turnUser.value = lsGet(LS.turnUser, "");
+
+  ui.icePolicy.value = lsGet(LS.icePolicy, "all");
+  ui.turnSave.value = lsGet(LS.turnSave, "0");
+  if (ui.turnSave.value === "1") ui.turnPass.value = lsGet(LS.turnPass, "");
+
+  ui.name.addEventListener("input", () => {
+    lsSet(LS.name, ui.name.value || "");
+    // update local roster + let others refresh displayed name
+    if (selfId) {
+      const r = ensureRoster(selfId);
+      if (r) { r.name = (ui.name.value || "").trim() || r.name; r.present = true; r.leftAt = null; }
+    }
+    scheduleHelloBroadcast();
+    renderParticipants();
+  });
+  ui.wsUrl.addEventListener("input", () => { lsSet(LS.wsUrl, ui.wsUrl.value || ""); refreshInviteUI(); });
+  ui.room.addEventListener("input", () => { lsSet(LS.room, ui.room.value || ""); refreshInviteUI(); invalidateE2EE(); });
+
+  ui.stunUrls.addEventListener("input", () => lsSet(LS.stunUrls, ui.stunUrls.value || ""));
+  ui.turnUrls.addEventListener("input", () => lsSet(LS.turnUrls, ui.turnUrls.value || ""));
+  ui.turnUser.addEventListener("input", () => lsSet(LS.turnUser, ui.turnUser.value || ""));
+  ui.icePolicy.addEventListener("change", () => lsSet(LS.icePolicy, ui.icePolicy.value || "all"));
+  ui.turnSave.addEventListener("change", () => {
+    lsSet(LS.turnSave, ui.turnSave.value);
+    if (ui.turnSave.value !== "1") {
+      lsSet(LS.turnPass, "");
+      ui.turnPass.value = "";
+    }
+  });
+  ui.turnPass.addEventListener("input", () => { if (ui.turnSave.value === "1") lsSet(LS.turnPass, ui.turnPass.value || ""); });
+
+  ui.btnTogglePass.addEventListener("click", () => {
+    ui.e2eePass.type = (ui.e2eePass.type === "password") ? "text" : "password";
+  });
+
+  // --------------------------
+  // UI helpers
+  // --------------------------
+  function escapeHtml(str) {
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function setPill(el, text, kind = "") {
+    el.textContent = text;
+    el.classList.remove("ok", "bad");
+    if (kind) el.classList.add(kind);
+  }
+
+  function addSys(text) {
+    const el = document.createElement("div");
+    el.className = "msg sys";
+    el.innerHTML = `<div class="bubble">${escapeHtml(text)}</div>`;
+    ui.chat.appendChild(el);
+    ui.chat.scrollTop = ui.chat.scrollHeight;
+  }
+
+  function addChat(from, text, me=false) {
+    const el = document.createElement("div");
+    el.className = "msg " + (me ? "me" : "");
+    el.innerHTML = `<div class="bubble"><b>${escapeHtml(from)}:</b> ${escapeHtml(text)}</div>`;
+    ui.chat.appendChild(el);
+    ui.chat.scrollTop = ui.chat.scrollHeight;
+  }
+
+  function shortId(id) {
+    if (!id) return "?";
+    return id.replace(/-/g, "").slice(0, 8);
+  }
+
+  function wsStateText(s) {
+    if (!ws) return "off";
+    if (s === 0) return "connecting";
+    if (s === 1) return "open";
+    if (s === 2) return "closing";
+    if (s === 3) return "closed";
+    return "?";
+  }
+
+  // --------------------------
+  // Base64url + gzip helpers (also used for QR)
+  // --------------------------
+  function b64urlEncode(bytes) {
+    let bin = "";
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function b64urlDecode(str) {
+    str = str.replace(/-/g, "+").replace(/_/g, "/");
+    while (str.length % 4) str += "=";
+    const bin = atob(str);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  const CAN_GZIP = ("CompressionStream" in window) && ("DecompressionStream" in window);
+
+  async function encodeForQr(text) {
+    const bytes = new TextEncoder().encode(text);
+    if (CAN_GZIP) {
+      const cs = new CompressionStream("gzip");
+      const w = cs.writable.getWriter();
+      w.write(bytes); w.close();
+      const buf = await new Response(cs.readable).arrayBuffer();
+      return "p2p1:" + b64urlEncode(new Uint8Array(buf));
+    }
+    return "p2p0:" + b64urlEncode(bytes);
+  }
+
+  async function decodeFromQr(payload) {
+    const s = String(payload || "").trim();
+    if (s.startsWith("p2p1:")) {
+      if (!CAN_GZIP) throw new Error("Нет DecompressionStream (нужен современный браузер)");
+      const bytes = b64urlDecode(s.slice(5));
+      const ds = new DecompressionStream("gzip");
+      const w = ds.writable.getWriter();
+      w.write(bytes); w.close();
+      const buf = await new Response(ds.readable).arrayBuffer();
+      return new TextDecoder().decode(buf);
+    }
+    if (s.startsWith("p2p0:")) {
+      const bytes = b64urlDecode(s.slice(5));
+      return new TextDecoder().decode(bytes);
+    }
+    return s;
+  }
+
+  // --------------------------
+  // E2EE (AES-GCM over DataChannel)
+  // --------------------------
+  let e2eeKey = null;
+  let e2eeCtx = { pass: null, salt: null };
+
+  function roomSalt() {
+    // Use room id if available; otherwise fall back.
+    const r = (ui.room.value || "").trim() || "manual";
+    return "p2pchat:" + r;
+  }
+
+  function invalidateE2EE() {
+    e2eeKey = null;
+    e2eeCtx = { pass: null, salt: null };
+    updatePills();
+    updateDiag();
+  }
+
+  async function getE2EEKey() {
+    const pass = (ui.e2eePass.value || "");
+    if (!pass) return null;
+
+    const salt = roomSalt();
+    if (e2eeKey && e2eeCtx.pass === pass && e2eeCtx.salt === salt) return e2eeKey;
+
+    const enc = new TextEncoder();
+    const baseKey = await crypto.subtle.importKey(
+      "raw",
+      enc.encode(pass),
+      "PBKDF2",
+      false,
+      ["deriveKey"]
+    );
+
+    // 100k PBKDF2 iterations is a reasonable baseline for browsers.
+    e2eeKey = await crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: enc.encode(salt), iterations: 100000, hash: "SHA-256" },
+      baseKey,
+      { name: "AES-GCM", length: 256 },
+      false,
+      ["encrypt", "decrypt"]
+    );
+
+    e2eeCtx = { pass, salt };
+    updatePills();
+    updateDiag();
+    return e2eeKey;
+  }
+
+  async function wrapMaybeEncrypt(payloadObj) {
+    const key = await getE2EEKey();
+    if (!key) return payloadObj;
+
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const pt = new TextEncoder().encode(JSON.stringify(payloadObj));
+    const ctBuf = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, pt);
+    const ct = new Uint8Array(ctBuf);
+
+    return { t: "e2ee", v: 1, iv: b64urlEncode(iv), ct: b64urlEncode(ct) };
+  }
+
+  async function unwrapMaybeDecrypt(msgObj) {
+    if (!msgObj || msgObj.t !== "e2ee") return msgObj;
+    const key = await getE2EEKey();
+    if (!key) throw new Error("E2EE выключен (нет пароля)");
+
+    const iv = b64urlDecode(msgObj.iv || "");
+    const ct = b64urlDecode(msgObj.ct || "");
+
+    const ptBuf = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+    const pt = new TextDecoder().decode(ptBuf);
+    return JSON.parse(pt);
+  }
+
+  ui.e2eePass.addEventListener("input", () => invalidateE2EE());
+
+  // --------------------------
+  // WebRTC config
+  // --------------------------
+  function parseUrls(str) {
+    return (str || "")
+      .split(/[\n,\s]+/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function buildRtcConfig() {
+    const stun = parseUrls(ui.stunUrls.value);
+    const turn = parseUrls(ui.turnUrls.value);
+
+    /** @type {RTCIceServer[]} */
+    const iceServers = [];
+
+    if (stun.length) iceServers.push({ urls: stun });
+
+    if (turn.length) {
+      const server = { urls: turn };
+      const user = (ui.turnUser.value || "").trim();
+      const pass = ui.turnPass.value || "";
+      if (user) server.username = user;
+      if (pass) server.credential = pass;
+      iceServers.push(server);
+    }
+
+    /** @type {RTCConfiguration} */
+    const cfg = { iceServers };
+    if (ui.icePolicy.value === "relay") cfg.iceTransportPolicy = "relay";
+
+    return cfg;
+  }
+
+  // --------------------------
+  // Mode B: room + group mesh
+  // --------------------------
+  let ws = null;
+  let selfId = null;
+  let roomMax = null;
+
+  /**
+   * Roster entry:
+   * { present:boolean, leftAt:number|null, name:string|null,
+   *   lastSeen:number, meshOpen:Set<string>|null, meshAt:number|null,
+   *   conn:string|null, ice:string|null, dc:string|null,
+   *   reconnecting:boolean, reconnectWhy:string|null }
+   */
+  /** @type {Map<string, any>} */
+  const roster = new Map();
+
+  /** @type {Map<string, any>} */
+  const reconnectTimers = new Map();
+
+  /** @type {Map<string, {pc:RTCPeerConnection, dc:RTCDataChannel|null, pending:RTCIceCandidate[], ice:string, conn:string}>} */
+  const peerConns = new Map();
+
+  function ensureRoster(peerId) {
+    if (!peerId) return null;
+    if (!roster.has(peerId)) {
+      roster.set(peerId, {
+        present: true,
+        leftAt: null,
+        name: null,
+        lastSeen: Date.now(),
+        meshOpen: null,
+        meshAt: null,
+        conn: null,
+        ice: null,
+        dc: null,
+        reconnecting: false,
+        reconnectWhy: null,
+      });
+    }
+    return roster.get(peerId);
+  }
+
+  function markSeen(peerId) {
+    const r = ensureRoster(peerId);
+    if (!r) return;
+    r.lastSeen = Date.now();
+  }
+
+  function displayPeerName(peerId) {
+    if (peerId === selfId) return localDisplayName() + " (вы)";
+    const r = roster.get(peerId);
+    const nm = (r && r.name) ? String(r.name) : "";
+    return nm || ("peer:" + shortId(peerId));
+  }
+
+  function shouldInitiate(peerId) {
+    if (!selfId || !peerId) return false;
+    // Deterministic initiator rule to avoid offer-offer races on reconnect.
+    return String(selfId) < String(peerId);
+  }
+
+  function scheduleReconnect(peerId, why) {
+    const r = roster.get(peerId);
+    if (!r || !r.present) return;
+    if (!ws || ws.readyState !== 1) return;
+    if (reconnectTimers.has(peerId)) return;
+    if (peerConns.has(peerId)) return; // already trying
+
+    r.reconnecting = true;
+    r.reconnectWhy = why || "unknown";
+    renderParticipants();
+
+    const base = (why === "disconnected") ? 2500 : 800;
+    const jitter = Math.floor(Math.random() * 500);
+    const t = setTimeout(() => {
+      reconnectTimers.delete(peerId);
+      const rr = roster.get(peerId);
+      if (!rr || !rr.present) return;
+      if (!ws || ws.readyState !== 1) return;
+      if (peerConns.has(peerId)) return;
+
+      rr.reconnecting = false;
+      rr.reconnectWhy = null;
+
+      if (shouldInitiate(peerId)) {
+        addSys(`🔁 Reconnect: создаю offer для ${displayPeerName(peerId)}`);
+        ensurePeerConn(peerId, true);
+      } else {
+        addSys(`🔁 Reconnect: жду offer от ${displayPeerName(peerId)}`);
+        // The other side should initiate.
+        renderParticipants();
+      }
+    }, base + jitter);
+    reconnectTimers.set(peerId, t);
+  }
+
+  function wsSend(obj) {
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify(obj));
+  }
+
+  function closePeer(peerId) {
+    const st = peerConns.get(peerId);
+    if (!st) return;
+    try { st.dc?.close(); } catch {}
+    try { st.pc?.close(); } catch {}
+    peerConns.delete(peerId);
+    // Keep roster/name so user can see who left.
+    updatePills();
+    updateDiag();
+    renderParticipants();
+  }
+
+  function closeAllPeers() {
+    for (const pid of [...peerConns.keys()]) closePeer(pid);
+  }
+
+  function wireDataChannel(peerId, dc) {
+    dc.onopen = async () => {
+      markSeen(peerId);
+      addSys(`✅ DC open с ${displayPeerName(peerId)}`);
+      updatePills();
+      updateDiag();
+      renderParticipants();
+      // Send hello so peers can display names even before first message.
+      try {
+        await sendToPeer(peerId, { t: "hello", name: (ui.name.value || "").trim() || "(без имени)", fromId: selfId, at: Date.now() });
+      } catch {}
+
+      // Share mesh status (who is connected to whom) after any change.
+      scheduleMeshBroadcast();
+    };
+
+    dc.onclose = () => {
+      addSys(`ℹ️ DC closed: ${displayPeerName(peerId)}`);
+      updatePills();
+      updateDiag();
+      renderParticipants();
+      scheduleMeshBroadcast();
+    };
+
+    dc.onmessage = async (e) => {
+      await handleIncoming(peerId, e.data);
+    };
+  }
+
+  function ensurePeerConn(peerId, initiator) {
+    if (peerConns.has(peerId)) return peerConns.get(peerId);
+
+    // ensure roster
+    const r = ensureRoster(peerId);
+    if (r) { r.present = true; r.leftAt = null; markSeen(peerId); }
+
+    const pc = new RTCPeerConnection(buildRtcConfig());
+    const st = { pc, dc: null, pending: [], ice: "new", conn: "new" };
+    peerConns.set(peerId, st);
+
+    pc.onicecandidate = (e) => {
+      if (!e.candidate) return;
+      wsSend({ t: "signal", to: peerId, data: { t: "candidate", candidate: e.candidate.toJSON() } });
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      st.ice = pc.iceConnectionState || "?";
+      updatePills();
+      updateDiag();
+      if (st.ice === "failed") {
+        addSys(`❌ ICE failed с ${displayPeerName(peerId)}. Возможно нужен TURN.`);
+        // Close and try reconnect (deterministically)
+        closePeer(peerId);
+        scheduleReconnect(peerId, "ice_failed");
+      }
+      renderParticipants();
+    };
+
+    pc.onconnectionstatechange = () => {
+      st.conn = pc.connectionState || "?";
+      updatePills();
+      updateDiag();
+      renderParticipants();
+
+      if (st.conn === "failed") {
+        closePeer(peerId);
+        scheduleReconnect(peerId, "conn_failed");
+      }
+      if (st.conn === "disconnected") {
+        // Give it a moment; if it doesn't recover, reconnect.
+        closePeer(peerId);
+        scheduleReconnect(peerId, "disconnected");
+      }
+    };
+
+    pc.ondatachannel = (e) => {
+      st.dc = e.channel;
+      wireDataChannel(peerId, st.dc);
+      updatePills();
+      updateDiag();
+      renderParticipants();
+    };
+
+    if (initiator) {
+      st.dc = pc.createDataChannel("chat", { ordered: true });
+      wireDataChannel(peerId, st.dc);
+
+      (async () => {
+        try {
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          wsSend({ t: "signal", to: peerId, data: { t: "offer", desc: { type: pc.localDescription.type, sdp: pc.localDescription.sdp } } });
+        } catch (e) {
+          addSys(`❌ Не удалось создать offer для ${shortId(peerId)}: ${e?.message || e}`);
+        }
+      })();
+    }
+
+    updatePills();
+    updateDiag();
+    renderParticipants();
+    return st;
+  }
+
+  async function handleSignal(from, data) {
+    if (!from || !data) return;
+
+    if (data.t === "offer" && data.desc) {
+      const st = ensurePeerConn(from, false);
+      await st.pc.setRemoteDescription(new RTCSessionDescription(data.desc));
+
+      const answer = await st.pc.createAnswer();
+      await st.pc.setLocalDescription(answer);
+
+      wsSend({ t: "signal", to: from, data: { t: "answer", desc: { type: st.pc.localDescription.type, sdp: st.pc.localDescription.sdp } } });
+
+      // Apply buffered ICE
+      for (const c of st.pending) {
+        try { await st.pc.addIceCandidate(c); } catch {}
+      }
+      st.pending = [];
+      return;
+    }
+
+    if (data.t === "answer" && data.desc) {
+      const st = ensurePeerConn(from, false);
+      await st.pc.setRemoteDescription(new RTCSessionDescription(data.desc));
+
+      for (const c of st.pending) {
+        try { await st.pc.addIceCandidate(c); } catch {}
+      }
+      st.pending = [];
+      return;
+    }
+
+    if (data.t === "candidate" && data.candidate) {
+      const st = ensurePeerConn(from, false);
+      try {
+        const c = new RTCIceCandidate(data.candidate);
+        if (st.pc.remoteDescription) {
+          await st.pc.addIceCandidate(c);
+        } else {
+          st.pending.push(c);
+        }
+      } catch {}
+      return;
+    }
+  }
+
+  function connectWs() {
+    const base = (ui.wsUrl.value || "").trim();
+    const room = (ui.room.value || "").trim();
+
+    if (!base) { addSys("❗ Укажите WS URL сигналинга."); return; }
+    if (!room) { addSys("❗ Укажите комнату."); return; }
+
+    // close previous ws (but keep existing p2p if you want; reset button closes everything)
+    if (ws) { try { ws.close(); } catch {} }
+
+    let url;
+    try { url = new URL(base); } catch { addSys("❌ Неверный WS URL."); return; }
+    url.searchParams.set("room", room);
+
+    // Reset room state
+    selfId = null;
+    roomMax = null;
+
+    setPill(ui.pillWS, "WS: connecting");
+    updatePills();
+    updateDiag();
+
+    ws = new WebSocket(url.toString());
+
+    ws.onopen = () => {
+      setPill(ui.pillWS, "WS: open", "ok");
+      ui.btnWsConnect.disabled = true;
+      ui.btnWsDisconnect.disabled = false;
+      addSys("✅ (WS) Подключились к комнате: " + room);
+      refreshInviteUI();
+      updatePills();
+      updateDiag();
+    };
+
+    ws.onclose = () => {
+      setPill(ui.pillWS, "WS: closed");
+      ui.btnWsConnect.disabled = false;
+      ui.btnWsDisconnect.disabled = true;
+      addSys("ℹ️ (WS) Сигналинг отключён.");
+      updatePills();
+      updateDiag();
+    };
+
+    ws.onerror = () => {
+      setPill(ui.pillWS, "WS: error", "bad");
+      addSys("❌ (WS) Ошибка соединения.");
+      updatePills();
+      updateDiag();
+    };
+
+    ws.onmessage = async (ev) => {
+      let msg;
+      try { msg = JSON.parse(ev.data); } catch { return; }
+
+      if (msg.t === "welcome") {
+        selfId = msg.id || null;
+        roomMax = msg.max || null;
+        const peers = Array.isArray(msg.peers) ? msg.peers : [];
+
+        // roster self
+        if (selfId) {
+          const rSelf = ensureRoster(selfId);
+          if (rSelf) {
+            rSelf.present = true;
+            rSelf.leftAt = null;
+            rSelf.name = (ui.name.value || "").trim() || null;
+            markSeen(selfId);
+          }
         }
 
-        function showMenu() {
-            hideAllScreens();
-            document.getElementById("menuScreen").style.display = "flex";
-            gameRunning = false;
+        // roster existing peers
+        for (const p of peers) {
+          if (!p?.id) continue;
+          const r = ensureRoster(p.id);
+          if (r) { r.present = true; r.leftAt = null; markSeen(p.id); }
         }
 
-        function showInstructions() {
-            hideAllScreens();
-            document.getElementById("instructionsScreen").style.display = "flex";
+        addSys(`(WS) Вы в комнате. selfId=${shortId(selfId)}. peers сейчас: ${peers.length}${roomMax ? "/" + roomMax : ""}`);
+
+        // New peer initiates offers to all existing peers.
+        for (const p of peers) {
+          if (!p?.id) continue;
+          ensurePeerConn(p.id, true);
         }
 
-        function showAbout() {
-            hideAllScreens();
-            document.getElementById("aboutScreen").style.display = "flex";
+        updatePills();
+        updateDiag();
+        renderParticipants();
+        return;
+      }
+
+      if (msg.t === "peer_join" && msg.id) {
+        ensureRoster(msg.id);
+        const r = roster.get(msg.id);
+        if (r) { r.present = true; r.leftAt = null; markSeen(msg.id); }
+        addSys(`➕ В комнату вошёл ${displayPeerName(msg.id)} (он инициирует соединения).`);
+        updatePills();
+        updateDiag();
+        renderParticipants();
+        return;
+      }
+
+      if (msg.t === "peer_leave" && msg.id) {
+        const r = ensureRoster(msg.id);
+        if (r) { r.present = false; r.leftAt = Date.now(); }
+        addSys(`➖ Вышел ${displayPeerName(msg.id)}`);
+        closePeer(msg.id);
+        renderParticipants();
+        return;
+      }
+
+      if (msg.t === "signal" && msg.from && msg.data) {
+        await handleSignal(msg.from, msg.data);
+        return;
+      }
+
+      if (msg.t === "room_full") {
+        addSys(`❌ Комната заполнена. max=${msg.max || "?"}`);
+        return;
+      }
+    };
+
+    updateDiag();
+  }
+
+  function disconnectWs() {
+    if (!ws) return;
+    try { ws.close(1000, "bye"); } catch {}
+  }
+
+  // --------------------------
+  // Mode A: manual 1:1 offer/answer (non-trickle)
+  // --------------------------
+  let pcManual = null;
+  let dcManual = null;
+
+  function ensureManualPC() {
+    if (pcManual) return;
+
+    pcManual = new RTCPeerConnection(buildRtcConfig());
+
+    pcManual.oniceconnectionstatechange = () => {
+      updatePills();
+      updateDiag();
+    };
+
+    pcManual.onconnectionstatechange = () => {
+      updatePills();
+      updateDiag();
+    };
+
+    pcManual.ondatachannel = (e) => {
+      dcManual = e.channel;
+      wireManualDC(dcManual);
+      updatePills();
+      updateDiag();
+    };
+  }
+
+  function wireManualDC(dc) {
+    dc.onopen = async () => {
+      addSys("✅ (manual) DataChannel открыт.");
+      updatePills();
+      updateDiag();
+    };
+    dc.onclose = () => {
+      addSys("ℹ️ (manual) DataChannel закрыт.");
+      updatePills();
+      updateDiag();
+    };
+    dc.onmessage = async (e) => {
+      await handleIncoming("manual", e.data);
+    };
+  }
+
+  async function waitIceGatheringComplete(pc) {
+    if (!pc) return;
+    if (pc.iceGatheringState === "complete") return;
+    await new Promise((resolve) => {
+      const check = () => {
+        if (pc.iceGatheringState === "complete") {
+          pc.removeEventListener("icegatheringstatechange", check);
+          resolve();
         }
+      };
+      pc.addEventListener("icegatheringstatechange", check);
+    });
+  }
 
-        function openShop() {
-            if (!gameRunning) return;
-            gameRunning = false;
-            hideAllScreens();
-            document.getElementById("shopScreen").style.display = "flex";
-            document.getElementById("shopCoinText").textContent = player.coins;
-            updateShopItems();
+  function packSDP(desc) {
+    return JSON.stringify({ type: desc.type, sdp: desc.sdp }, null, 2);
+  }
+
+  function unpackSDP(text) {
+    const obj = JSON.parse(text);
+    if (!obj || !obj.type || !obj.sdp) throw new Error("Неверный формат SDP JSON");
+    return new RTCSessionDescription({ type: obj.type, sdp: obj.sdp });
+  }
+
+  async function createOfferManual() {
+    ensureManualPC();
+
+    if (!dcManual) {
+      dcManual = pcManual.createDataChannel("chat", { ordered: true });
+      wireManualDC(dcManual);
+    }
+
+    addSys("(manual) Создаю Offer…");
+    const offer = await pcManual.createOffer();
+    await pcManual.setLocalDescription(offer);
+    await waitIceGatheringComplete(pcManual);
+
+    ui.localSdp.value = packSDP(pcManual.localDescription);
+    addSys("✅ (manual) Offer готов. Скопируйте/передайте другой стороне.");
+    updatePills();
+    updateDiag();
+  }
+
+  async function applyRemoteManual() {
+    ensureManualPC();
+
+    const remoteText = (ui.remoteSdp.value || "").trim();
+    if (!remoteText) { addSys("❗ (manual) Вставьте Offer/Answer в поле Remote."); return; }
+
+    let remoteDesc;
+    try { remoteDesc = unpackSDP(remoteText); }
+    catch (e) { addSys("❌ (manual) Ошибка парсинга SDP: " + e.message); return; }
+
+    addSys("(manual) Устанавливаю Remote SDP (" + remoteDesc.type + ")…");
+    await pcManual.setRemoteDescription(remoteDesc);
+
+    if (remoteDesc.type === "offer") {
+      addSys("(manual) Создаю Answer…");
+      const answer = await pcManual.createAnswer();
+      await pcManual.setLocalDescription(answer);
+      await waitIceGatheringComplete(pcManual);
+      ui.localSdp.value = packSDP(pcManual.localDescription);
+      addSys("✅ (manual) Answer готов. Отправьте инициатору.");
+    } else {
+      addSys("✅ (manual) Answer принят. Ждём открытия DC…");
+    }
+
+    updatePills();
+    updateDiag();
+  }
+
+  async function copyLocal() {
+    const t = (ui.localSdp.value || "").trim();
+    if (!t) { addSys("❗ Нечего копировать (Offer/Answer пустой)." ); return; }
+    try {
+      await navigator.clipboard.writeText(t);
+      addSys("📋 Скопировано в буфер обмена.");
+    } catch {
+      addSys("❗ Не удалось скопировать. Скопируйте вручную.");
+    }
+  }
+
+  // --------------------------
+  // DataChannel messaging (shared)
+  // --------------------------
+  function localDisplayName() {
+    return (ui.name.value || "").trim() || "Вы";
+  }
+
+  function openChannels() {
+    const chans = [];
+    for (const [pid, st] of peerConns.entries()) {
+      if (st.dc && st.dc.readyState === "open") chans.push({ peerId: pid, dc: st.dc });
+    }
+    if (dcManual && dcManual.readyState === "open") chans.push({ peerId: "manual", dc: dcManual });
+    return chans;
+  }
+
+  async function sendToPeer(peerId, payloadObj) {
+    // Used for hello, etc.
+    const st = peerConns.get(peerId);
+    const dc = st?.dc;
+    if (!dc || dc.readyState !== "open") return;
+
+    const wrapped = await wrapMaybeEncrypt(payloadObj);
+    dc.send(JSON.stringify(wrapped));
+  }
+
+  async function broadcast(payloadObj) {
+    const chans = openChannels();
+    if (!chans.length) throw new Error("Нет открытых соединений");
+
+    const wrapped = await wrapMaybeEncrypt(payloadObj);
+    const wire = JSON.stringify(wrapped);
+    for (const c of chans) {
+      try { c.dc.send(wire); } catch {}
+    }
+  }
+
+  // Debounced "presence" broadcasts
+  let meshTimer = null;
+  let helloTimer = null;
+
+  function scheduleMeshBroadcast() {
+    if (meshTimer) return;
+    meshTimer = setTimeout(async () => {
+      meshTimer = null;
+      await broadcastMeshStatus();
+    }, 600);
+  }
+
+  function scheduleHelloBroadcast() {
+    if (helloTimer) return;
+    helloTimer = setTimeout(async () => {
+      helloTimer = null;
+      const name = (ui.name.value || "").trim() || "(без имени)";
+      if (selfId) {
+        const r = ensureRoster(selfId);
+        if (r) { r.name = name; r.present = true; r.leftAt = null; }
+      }
+      try {
+        await broadcast({ t: "hello", name, fromId: selfId, at: Date.now() });
+      } catch {}
+      renderParticipants();
+    }, 450);
+  }
+
+  async function broadcastMeshStatus() {
+    if (!selfId) return;
+    // List room-peers with open DC
+    const open = [];
+    for (const [pid, st] of peerConns.entries()) {
+      if (st.dc && st.dc.readyState === "open") open.push(pid);
+    }
+    const rSelf = ensureRoster(selfId);
+    if (rSelf) {
+      rSelf.meshOpen = new Set(open);
+      rSelf.meshAt = Date.now();
+      rSelf.present = true;
+      rSelf.leftAt = null;
+      rSelf.name = (ui.name.value || "").trim() || rSelf.name;
+    }
+    try {
+      await broadcast({ t: "mesh", open, at: Date.now(), fromId: selfId });
+    } catch {}
+    renderParticipants();
+  }
+
+  async function handleIncoming(peerId, raw) {
+    let msg;
+    try { msg = JSON.parse(raw); }
+    catch {
+      const from = (peerId === "manual") ? "Peer" : displayPeerName(peerId);
+      addChat(from, String(raw), false);
+      return;
+    }
+
+    // ping/pong (unencrypted)
+    if (msg && msg.t === "ping") {
+      // reply
+      const reply = { t: "pong", at: Date.now() };
+      if (peerId === "manual") {
+        try { dcManual?.send(JSON.stringify(reply)); } catch {}
+      } else {
+        try { peerConns.get(peerId)?.dc?.send(JSON.stringify(reply)); } catch {}
+      }
+      addSys(`⬅️ ping от ${(peerId === "manual") ? "Peer" : displayPeerName(peerId)}`);
+      return;
+    }
+    if (msg && msg.t === "pong") {
+      addSys(`⬅️ pong от ${(peerId === "manual") ? "Peer" : displayPeerName(peerId)}`);
+      return;
+    }
+
+    // decrypt if needed
+    if (msg && msg.t === "e2ee") {
+      try {
+        msg = await unwrapMaybeDecrypt(msg);
+      } catch (e) {
+        addSys(`🔒 Не удалось расшифровать сообщение от ${peerId === "manual" ? "Peer" : ("peer:" + shortId(peerId))} (пароль неверный?)`);
+        return;
+      }
+    }
+
+    if (!msg || typeof msg !== "object") return;
+
+    if (msg.t === "hello") {
+      const nm = String(msg.name || "").trim();
+      if (peerId !== "manual" && nm) {
+        const r = ensureRoster(peerId);
+        if (r) r.name = nm;
+        markSeen(peerId);
+      }
+      addSys(`👋 ${nm || (peerId === "manual" ? "Peer" : ("peer:" + shortId(peerId)))} на связи`);
+      updatePills();
+      updateDiag();
+      renderParticipants();
+      return;
+    }
+
+    if (msg.t === "mesh") {
+      if (peerId !== "manual") {
+        const r = ensureRoster(peerId);
+        if (r) {
+          const arr = Array.isArray(msg.open) ? msg.open.map(String) : [];
+          r.meshOpen = new Set(arr);
+          r.meshAt = Date.now();
+          markSeen(peerId);
         }
+        updatePills();
+        updateDiag();
+        renderParticipants();
+      }
+      return;
+    }
 
-        function closeShop() {
-            hideAllScreens();
-            document.getElementById("gameScreen").style.display = "block";
-            gameRunning = true;
-            lastFrameTs = performance.now();
-            requestAnimationFrame(gameLoop);
+    if (msg.t === "chat") {
+      const from = String(msg.from || "").trim() || ((peerId === "manual") ? "Peer" : displayPeerName(peerId));
+      const text = String(msg.text || "");
+
+      // learn name mapping for room peers
+      if (peerId !== "manual" && msg.fromId && from) {
+        const r = ensureRoster(peerId);
+        if (r) r.name = from;
+        markSeen(peerId);
+      }
+
+      addChat(from, text, false);
+      updatePills();
+      updateDiag();
+      renderParticipants();
+      return;
+    }
+
+    // fallback
+    addSys(`ℹ️ Неизвестное сообщение: ${escapeHtml(JSON.stringify(msg)).slice(0, 300)}`);
+  }
+
+  // --------------------------
+  // QR rendering
+  // --------------------------
+  function drawQrTextToCanvas(text, canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    let qr;
+    try {
+      qr = qrcodegen.QrCode.encodeText(String(text), qrcodegen.QrCode.Ecc.LOW);
+    } catch {
+      ctx.fillStyle = "#000";
+      ctx.font = "12px ui-monospace, monospace";
+      ctx.fillText("QR too big", 10, 20);
+      return false;
+    }
+
+    const border = 2;
+    const size = qr.size;
+    const scale = Math.floor(Math.min(canvas.width, canvas.height) / (size + border * 2));
+    const drawSize = (size + border * 2) * scale;
+    const ox = Math.floor((canvas.width - drawSize) / 2);
+    const oy = Math.floor((canvas.height - drawSize) / 2);
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#000";
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (qr.getModule(x, y)) {
+          ctx.fillRect(ox + (x + border) * scale, oy + (y + border) * scale, scale, scale);
         }
+      }
+    }
 
-        function startGame() {
-            hideAllScreens();
-            document.getElementById("gameScreen").style.display = "block";
-            initGame();
+    return true;
+  }
+
+  function clearQrCanvases() {
+    for (const c of [ui.qrRoom, ui.qrSdp]) {
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, c.width, c.height);
+    }
+  }
+
+  async function makeSdpQr() {
+    const t = (ui.localSdp.value || "").trim();
+    if (!t) { addSys("❗ Сначала создайте Offer/Answer."); return; }
+
+    let encoded;
+    try { encoded = await encodeForQr(t); }
+    catch (e) { addSys("❌ Не получилось подготовить данные для QR: " + (e?.message || e)); return; }
+
+    const ok = drawQrTextToCanvas(encoded, ui.qrSdp);
+    if (!ok) addSys("❌ QR не влез (слишком много данных). Используйте режим комнаты или copy/paste.");
+    else addSys("✅ QR для Offer/Answer обновлён.");
+  }
+
+  function basePageUrl() {
+    const u = new URL(location.href);
+    u.search = "";
+    u.hash = "";
+    return u;
+  }
+
+  function makeInviteUrl() {
+    const wsUrl = (ui.wsUrl.value || "").trim();
+    const room = (ui.room.value || "").trim();
+    if (!wsUrl || !room) return "";
+
+    const u = basePageUrl();
+    u.searchParams.set("ws", wsUrl);
+    u.searchParams.set("room", room);
+    u.searchParams.set("autojoin", "1");
+    u.searchParams.set("mode", "room");
+    return u.toString();
+  }
+
+  function refreshInviteUI() {
+    const link = makeInviteUrl();
+    ui.inviteLink.value = link;
+    // If QR already present, refresh it
+    if (link) drawQrTextToCanvas(link, ui.qrRoom);
+  }
+
+  function makeRoomQr() {
+    const link = makeInviteUrl();
+    if (!link) { addSys("❗ Заполните WS URL и комнату."); return; }
+    const ok = drawQrTextToCanvas(link, ui.qrRoom);
+    if (!ok) addSys("❌ Не удалось сделать QR комнаты.");
+    else addSys("✅ QR комнаты обновлён.");
+  }
+
+  async function copyInvite() {
+    const link = (ui.inviteLink.value || "").trim();
+    if (!link) { addSys("❗ Нет ссылки. Создайте комнату или заполните поля."); return; }
+    try { await navigator.clipboard.writeText(link); addSys("📋 Ссылка скопирована."); }
+    catch { addSys("❗ Не удалось скопировать. Скопируйте вручную."); }
+  }
+
+  async function shareInvite() {
+    const link = (ui.inviteLink.value || "").trim();
+    if (!link) { addSys("❗ Нет ссылки. Создайте комнату или заполните поля."); return; }
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "P2P Chat invite", text: "Комната для P2P чата", url: link });
+        addSys("✅ Ок, приглашение отправлено.");
+        return;
+      } catch {
+        // fallback to copy
+      }
+    }
+    await copyInvite();
+  }
+
+  // --------------------------
+  // QR scanning
+  // --------------------------
+  let scanStream = null;
+  let scanStopFlag = false;
+
+  async function onScanned(raw) {
+    const s = String(raw || "").trim();
+
+    // URL invite?
+    if (/^https?:\/\//i.test(s)) {
+      try {
+        const u = new URL(s);
+        const wsParam = u.searchParams.get("ws");
+        const roomParam = u.searchParams.get("room");
+        const autojoin = u.searchParams.get("autojoin") === "1";
+        if (wsParam && roomParam) {
+          ui.wsUrl.value = wsParam;
+          ui.room.value = roomParam;
+          lsSet(LS.wsUrl, ui.wsUrl.value);
+          lsSet(LS.room, ui.room.value);
+          refreshInviteUI();
+          addSys("✅ Приглашение применено из QR. " + (autojoin ? "Подключаюсь…" : "Нажмите 'Подключиться'."));
+          if (autojoin) connectWs();
+          return;
         }
+      } catch {}
+    }
 
-        // ---------- Canvas и миникарта ----------
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const minimapCanvas = document.getElementById("minimapCanvas");
-        const minimapCtx = minimapCanvas.getContext("2d");
+    // Legacy room QR (older versions)
+    if (s.startsWith("p2proom:")) {
+      const rest = s.slice("p2proom:".length);
+      const parts = rest.split("|");
+      if (parts.length >= 2) {
+        ui.wsUrl.value = parts[0];
+        ui.room.value = parts[1];
+        lsSet(LS.wsUrl, ui.wsUrl.value);
+        lsSet(LS.room, ui.room.value);
+        refreshInviteUI();
+        addSys("✅ QR комнаты применён. Подключаюсь…");
+        connectWs();
+        return;
+      }
+    }
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+    // SDP QR
+    let decoded;
+    try { decoded = await decodeFromQr(s); }
+    catch (e) { addSys("❌ Не получилось декодировать QR: " + (e?.message || e)); return; }
+
+    ui.remoteSdp.value = decoded;
+    addSys("✅ QR вставлен в Remote. Применяю…");
+    try { await applyRemoteManual(); }
+    catch (e) { addSys("❌ Ошибка применения Remote: " + (e?.message || e)); }
+  }
+
+  async function scanLoop(detector) {
+    while (!scanStopFlag) {
+      try {
+        const barcodes = await detector.detect(ui.scanVideo);
+        if (barcodes && barcodes.length) {
+          const raw = barcodes[0].rawValue;
+          addSys("📷 QR найден. Обрабатываю…");
+          await onScanned(raw);
+          await stopScan();
+          return;
         }
-        resizeCanvas();
-        window.addEventListener("resize", resizeCanvas);
-
-        function resizeMinimap() {
-            const w = window.innerWidth;
-            const size = w > 1000 ? 220 : w > 700 ? 180 : 150;
-            minimapCanvas.width = size;
-            minimapCanvas.height = size;
-            minimapCanvas.style.width = size + "px";
-            minimapCanvas.style.height = size + "px";
-        }
-        resizeMinimap();
-        window.addEventListener("resize", resizeMinimap);
-
-        // ---------- Игровые константы ----------
-        const WORLD_WIDTH = 3200;
-        const WORLD_HEIGHT = 3200;
-        const TILE_SIZE = 64;
-
-        // ---------- Клавиатура ----------
-        const keys = {};
-        window.addEventListener("keydown", (e) => {
-            keys[e.code] = true;
-            if (e.code === "KeyB") {
-                openShop();
-            }
-        });
-        window.addEventListener("keyup", (e) => {
-            keys[e.code] = false;
-        });
-
-        // ---------- Обработка правой кнопки мыши ----------
-        canvas.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            return false;
-        });
-
-        let rightMouseDown = false;
-        canvas.addEventListener('mousedown', (e) => {
-            if (e.button === 2) {
-                rightMouseDown = true;
-                e.preventDefault();
-            }
-        });
-        canvas.addEventListener('mouseup', (e) => {
-            if (e.button === 2) {
-                rightMouseDown = false;
-                e.preventDefault();
-            }
-        });
-
-        // ---------- Джойстик ----------
-        const joystickVector = { x: 0, y: 0 };
-        let joystickActive = false;
-
-        if (isTouchDevice) {
-            const jc = document.getElementById("joystickContainer");
-            const jb = jc.querySelector(".joystick-base");
-            const js = document.getElementById("joystickStick");
-            const maxDistance = 40;
-            let startX = 0, startY = 0;
-
-            jc.style.display = "block";
-            document.getElementById("attackButton").style.display = "flex";
-
-            jc.addEventListener("touchstart", (e) => {
-                e.preventDefault();
-                const rect = jb.getBoundingClientRect();
-                startX = rect.left + rect.width / 2;
-                startY = rect.top + rect.height / 2;
-                joystickActive = true;
-            }, { passive: false });
-
-            document.addEventListener("touchmove", (e) => {
-                if (!joystickActive) return;
-                e.preventDefault();
-                const t = e.touches[0];
-                let dx = t.clientX - startX;
-                let dy = t.clientY - startY;
-                const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                if (dist > maxDistance) {
-                    dx = dx / dist * maxDistance;
-                    dy = dy / dist * maxDistance;
-                }
-                js.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-                joystickVector.x = dx / maxDistance;
-                joystickVector.y = dy / maxDistance;
-            }, { passive: false });
-
-            document.addEventListener("touchend", (e) => {
-                if (!joystickActive) return;
-                e.preventDefault();
-                joystickActive = false;
-                js.style.transform = "translate(-50%, -50%)";
-                joystickVector.x = 0;
-                joystickVector.y = 0;
-            }, { passive: false });
-
-            const attackButton = document.getElementById("attackButton");
-            attackButton.addEventListener("touchstart", (e) => {
-                e.preventDefault();
-                keys["Space"] = true;
-                if (navigator.vibrate) navigator.vibrate(40);
-            }, { passive: false });
-            attackButton.addEventListener("touchend", (e) => {
-                e.preventDefault();
-                keys["Space"] = false;
-            }, { passive: false });
-        }
-
-        // ---------- Классы объектов ----------
-        class Player {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = 20;
-                this.baseSpeed = 220;
-                this.speed = 220;
-                this.maxHealth = 100;
-                this.health = this.maxHealth;
-                this.coins = 0;
-                this.weapon = 'basic';
-                this.baseWeaponDamage = 20;
-                this.weaponDamage = 20;
-                this.shootCooldown = 0.4;
-                this.buffs = [];
-                this.regenRate = 0;
-                this.level = 1;
-                this.speedMultiplier = 1.0;
-                this.damageMultiplier = 1.0;
-            }
-
-            update(dt) {
-                let dx = 0, dy = 0;
-
-                if (!isTouchDevice) {
-                    if (keys["KeyW"] || keys["ArrowUp"]) dy -= 1;
-                    if (keys["KeyS"] || keys["ArrowDown"]) dy += 1;
-                    if (keys["KeyA"] || keys["ArrowLeft"]) dx -= 1;
-                    if (keys["KeyD"] || keys["ArrowRight"]) dx += 1;
-                } else {
-                    dx = joystickVector.x;
-                    dy = joystickVector.y;
-                }
-
-                if (dx !== 0 || dy !== 0) {
-                    const len = Math.hypot(dx, dy);
-                    dx /= len;
-                    dy /= len;
-                }
-
-                const step = this.speed * dt;
-                let nx = this.x + dx * step;
-                let ny = this.y + dy * step;
-
-                // Игрок НЕ проходит сквозь стены
-                if (!checkCollisionCircle(nx, this.y, this.size)) {
-                    this.x = nx;
-                }
-                if (!checkCollisionCircle(this.x, ny, this.size)) {
-                    this.y = ny;
-                }
-
-                this.x = clamp(this.x, this.size, WORLD_WIDTH - this.size);
-                this.y = clamp(this.y, this.size, WORLD_HEIGHT - this.size);
-
-                // Регенерация здоровья
-                if (this.regenRate > 0 && this.health < this.maxHealth) {
-                    this.health = Math.min(this.maxHealth, this.health + this.regenRate * dt);
-                }
-
-                // Обновление урона с учетом множителей
-                this.updateWeaponDamage();
-            }
-
-            updateWeaponDamage() {
-                this.weaponDamage = this.baseWeaponDamage * this.damageMultiplier;
-            }
-
-            applyBuff(type) {
-                // Баффы теперь вечные
-                switch(type) {
-                    case 'damage':
-                        this.damageMultiplier *= 1.5;
-                        this.updateWeaponDamage();
-                        break;
-                    case 'speed':
-                        this.speedMultiplier *= 1.4;
-                        this.speed = this.baseSpeed * this.speedMultiplier;
-                        break;
-                }
-                
-                // Добавляем в массив для отслеживания
-                if (!this.buffs.includes(type)) {
-                    this.buffs.push(type);
-                }
-            }
-
-            draw(camera) {
-                const sx = Math.floor(this.x - camera.x);
-                const sy = Math.floor(this.y - camera.y);
-
-                // тень
-                ctx.fillStyle = "rgba(0,0,0,0.5)";
-                ctx.beginPath();
-                ctx.ellipse(sx, sy + this.size, this.size * 0.75, this.size * 0.3, 0, 0, Math.PI * 2);
-                ctx.fill();
-
-                // тело
-                ctx.fillStyle = "#3b82f6";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                // глаза
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(sx - 4, sy - 2, 2, 4);
-                ctx.fillRect(sx + 2, sy - 2, 2, 4);
-
-                // оружие в зависимости от типа
-                ctx.strokeStyle = "#ffffff";
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                
-                switch(this.weapon) {
-                    case 'pistol':
-                        ctx.moveTo(sx + 15, sy);
-                        ctx.lineTo(sx + 25, sy);
-                        break;
-                    case 'shotgun':
-                        ctx.moveTo(sx + 15, sy - 3);
-                        ctx.lineTo(sx + 30, sy - 10);
-                        ctx.moveTo(sx + 15, sy);
-                        ctx.lineTo(sx + 30, sy);
-                        ctx.moveTo(sx + 15, sy + 3);
-                        ctx.lineTo(sx + 30, sy + 10);
-                        break;
-                    case 'machinegun':
-                        ctx.moveTo(sx + 15, sy - 2);
-                        ctx.lineTo(sx + 30, sy - 5);
-                        ctx.moveTo(sx + 15, sy);
-                        ctx.lineTo(sx + 30, sy);
-                        ctx.moveTo(sx + 15, sy + 2);
-                        ctx.lineTo(sx + 30, sy + 5);
-                        break;
-                    default:
-                        ctx.moveTo(sx + 15, sy);
-                        ctx.lineTo(sx + 25, sy);
-                }
-                ctx.stroke();
-            }
-
-            addCoins(amount) {
-                this.coins += amount;
-                document.getElementById("coinText").textContent = this.coins;
-            }
-        }
-
-        class Enemy {
-            constructor(x, y, wave) {
-                this.x = x;
-                this.y = y;
-                this.size = 16 + wave * 0.2;
-                this.baseSpeed = 120 + wave * 2;
-                this.speed = 120 + wave * 2;
-                this.health = 20 + wave * 3;
-                this.maxHealth = this.health;
-                this.type = "normal";
-                this.wave = wave;
-            }
-
-            update(dt) {
-                const dx = player.x - this.x;
-                const dy = player.y - this.y;
-                const dist = Math.hypot(dx, dy) || 1;
-                const vx = (dx / dist) * this.speed * dt;
-                const vy = (dy / dist) * this.speed * dt;
-
-                // Монстры ходят сквозь стены
-                this.x += vx;
-                this.y += vy;
-
-                const dToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
-                if (dToPlayer < this.size + player.size) {
-                    if (player.health > 0) {
-                        player.health -= (20 + this.wave * 0.5) * dt;
-                        if (player.health < 0) player.health = 0;
-                    }
-                }
-            }
-
-            draw(camera) {
-                const sx = this.x - camera.x;
-                const sy = this.y - camera.y;
-
-                ctx.fillStyle = "#111827";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size + 3, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.fillStyle = "#dc2626";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Индикатор здоровья
-                const healthPercent = this.health / this.maxHealth;
-                ctx.fillStyle = "#22c55e";
-                ctx.fillRect(sx - this.size, sy - this.size - 5, this.size * 2 * healthPercent, 3);
-
-                ctx.fillStyle = "#fee2e2";
-                ctx.fillRect(sx - 6, sy - 3, 4, 3);
-                ctx.fillRect(sx + 2, sy - 3, 4, 3);
-            }
-        }
-
-        class FastEnemy {
-            constructor(x, y, wave) {
-                this.x = x;
-                this.y = y;
-                this.size = 14 + wave * 0.15;
-                this.baseSpeed = 180 + wave * 3;
-                this.speed = 180 + wave * 3;
-                this.health = 15 + wave * 2;
-                this.maxHealth = this.health;
-                this.type = "fast";
-                this.wave = wave;
-            }
-
-            update(dt) {
-                const dx = player.x - this.x;
-                const dy = player.y - this.y;
-                const dist = Math.hypot(dx, dy) || 1;
-                const vx = (dx / dist) * this.speed * dt;
-                const vy = (dy / dist) * this.speed * dt;
-
-                // Монстры ходят сквозь стены
-                this.x += vx;
-                this.y += vy;
-
-                const dToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
-                if (dToPlayer < this.size + player.size) {
-                    if (player.health > 0) {
-                        player.health -= (15 + this.wave * 0.4) * dt;
-                        if (player.health < 0) player.health = 0;
-                    }
-                }
-            }
-
-            draw(camera) {
-                const sx = this.x - camera.x;
-                const sy = this.y - camera.y;
-
-                ctx.fillStyle = "#0c4a6e";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size + 3, 0, Math.PI * 2);
-                ctx.fill();
-
-                ctx.fillStyle = "#3b82f6";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Индикатор здоровья
-                const healthPercent = this.health / this.maxHealth;
-                ctx.fillStyle = "#22c55e";
-                ctx.fillRect(sx - this.size, sy - this.size - 5, this.size * 2 * healthPercent, 3);
-
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(sx - 5, sy - 3, 3, 2);
-                ctx.fillRect(sx + 2, sy - 3, 3, 2);
-                
-                ctx.strokeStyle = "#ffffff";
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(sx - 3, sy + 3);
-                ctx.lineTo(sx + 3, sy + 3);
-                ctx.stroke();
-            }
-        }
-
-        class BossEnemy {
-            constructor(x, y, wave) {
-                this.x = x;
-                this.y = y;
-                this.bossLevel = Math.floor(wave / 5);
-                this.size = 35 + this.bossLevel * 5;
-                this.speed = 100 + this.bossLevel * 5;
-                this.health = 300 + this.bossLevel * 100;
-                this.maxHealth = this.health;
-                this.damage = 50 + this.bossLevel * 10;
-                this.type = "boss";
-                this.wave = wave;
-                this.pulse = 0;
-                this.lastAttackTime = 0;
-                this.attackCooldown = 2 - this.bossLevel * 0.1;
-            }
-
-            update(dt) {
-                this.pulse += dt * 3;
-                
-                const dx = player.x - this.x;
-                const dy = player.y - this.y;
-                const dist = Math.hypot(dx, dy) || 1;
-                const vx = (dx / dist) * this.speed * dt;
-                const vy = (dy / dist) * this.speed * dt;
-
-                // Босс ходит сквозь стены
-                this.x += vx;
-                this.y += vy;
-
-                // Атака игрока
-                const dToPlayer = Math.hypot(player.x - this.x, player.y - this.y);
-                const currentTime = gameTime;
-                
-                if (dToPlayer < this.size + player.size + 10) {
-                    if (currentTime - this.lastAttackTime > this.attackCooldown) {
-                        player.health -= this.damage;
-                        this.lastAttackTime = currentTime;
-                        if (navigator.vibrate) navigator.vibrate(200);
-                    }
-                }
-            }
-
-            draw(camera) {
-                const sx = this.x - camera.x;
-                const sy = this.y - camera.y;
-                const pulseSize = Math.sin(this.pulse) * 5;
-
-                // Аура босса
-                ctx.fillStyle = "rgba(139, 0, 0, 0.2)";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size + 15 + pulseSize, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Тело босса
-                ctx.fillStyle = "#8b0000";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size + pulseSize, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Индикатор здоровья
-                const healthPercent = this.health / this.maxHealth;
-                ctx.fillStyle = "#22c55e";
-                ctx.fillRect(sx - this.size - 10, sy - this.size - 15, (this.size + 10) * 2 * healthPercent, 8);
-                ctx.strokeStyle = "#ffffff";
-                ctx.lineWidth = 2;
-                ctx.strokeRect(sx - this.size - 10, sy - this.size - 15, (this.size + 10) * 2, 8);
-
-                // Глаза
-                ctx.fillStyle = "#ff0000";
-                ctx.beginPath();
-                ctx.arc(sx - 10, sy - 5, 8, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(sx + 10, sy - 5, 8, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Рот
-                ctx.fillStyle = "#000000";
-                ctx.beginPath();
-                ctx.arc(sx, sy + 10, 12, 0, Math.PI, false);
-                ctx.fill();
-
-                // Текст уровня босса
-                ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 16px Arial";
-                ctx.textAlign = "center";
-                ctx.fillText(`БОСС ${this.bossLevel}`, sx, sy - this.size - 25);
-                ctx.textAlign = "left";
-            }
-        }
-
-        class Projectile {
-            constructor(x, y, dx, dy, damage, type = 'basic') {
-                this.x = x;
-                this.y = y;
-                this.dx = dx;
-                this.dy = dy;
-                this.speed = 520;
-                this.size = type === 'shotgun' ? 8 : 5;
-                this.life = type === 'shotgun' ? 0.5 : 0.8;
-                this.damage = damage;
-                this.type = type;
-            }
-
-            update(dt) {
-                this.x += this.dx * this.speed * dt;
-                this.y += this.dy * this.speed * dt;
-                this.life -= dt;
-            }
-
-            draw(camera) {
-                const sx = this.x - camera.x;
-                const sy = this.y - camera.y;
-
-                if (this.type === 'shotgun') {
-                    ctx.fillStyle = "#ff6b00";
-                } else if (this.type === 'machinegun') {
-                    ctx.fillStyle = "#00ff88";
-                } else {
-                    ctx.fillStyle = "#fbbf24";
-                }
-                
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.fillStyle = `rgba(251, 191, 36, 0.3)`;
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size * 2, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        class Coin {
-            constructor(x, y, value) {
-                this.x = x;
-                this.y = y;
-                this.size = 8;
-                this.value = value;
-                this.float = Math.random() * Math.PI * 2;
-            }
-
-            update(dt) {
-                this.float += dt * 3;
-            }
-
-            draw(camera) {
-                const sx = this.x - camera.x;
-                const sy = this.y - camera.y + Math.sin(this.float) * 3;
-
-                ctx.fillStyle = "#fbbf24";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.fillStyle = "#92400e";
-                ctx.beginPath();
-                ctx.arc(sx, sy, this.size * 0.6, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Блеск
-                ctx.fillStyle = "#ffffff";
-                ctx.beginPath();
-                ctx.arc(sx - 3, sy - 3, this.size * 0.3, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Отображение значения (только для боссовых монет)
-                if (this.value > 10) {
-                    ctx.fillStyle = "#ffffff";
-                    ctx.font = "bold 10px Arial";
-                    ctx.textAlign = "center";
-                    ctx.fillText(this.value, sx, sy + 15);
-                    ctx.textAlign = "left";
-                }
-            }
-        }
-
-        class HealthPickup {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.size = 10;
-                this.float = Math.random() * Math.PI * 2;
-            }
-
-            draw(camera) {
-                const sx = this.x - camera.x;
-                const sy = this.y - camera.y + Math.sin(this.float) * 3;
-
-                ctx.fillStyle = "#dc2626";
-                ctx.fillRect(sx - 8, sy - 4, 16, 8);
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(sx - 4, sy - 8, 8, 4);
-                ctx.fillRect(sx - 1, sy - 11, 2, 3);
-            }
-        }
-
-        // ---------- Объекты и состояние ----------
-        let player;
-        let enemies = [];
-        let projectiles = [];
-        let coins = [];
-        let healthPickups = [];
-        let obstacles = [];
-        let camera = { x: 0, y: 0 };
-        let wave = 1;
-        let enemiesPerWave = 6;
-        let shootTimer = 0;
-        let gameTime = 0;
-        let lastFrameTs = performance.now();
-        let gameRunning = false;
-        let currentBoss = null;
-
-        // ---------- Вспомогательные функции ----------
-        function clamp(v, min, max) { return v < min ? min : v > max ? max : v; }
-
-        function randRange(min, max) {
-            return Math.random() * (max - min) + min;
-        }
-
-        function generateObstacles() {
-            obstacles = [];
-            const count = 200;
-            for (let i = 0; i < count; i++) {
-                const x = randRange(80, WORLD_WIDTH - 80);
-                const y = randRange(80, WORLD_HEIGHT - 80);
-                const r = randRange(20, 40);
-                const type = Math.random() > 0.5 ? "tree" : "rock";
-                obstacles.push({ x, y, r, type });
-            }
-        }
-
-        function checkCollisionCircle(x, y, r) {
-            for (const o of obstacles) {
-                const d = Math.hypot(o.x - x, o.y - y);
-                if (d < o.r + r) return true;
-            }
-            return false;
-        }
-
-        // ---------- Магазин ----------
-        function updateShopItems() {
-            const items = [
-                { id: 'pistol', price: 50, owned: player.weapon === 'pistol' },
-                { id: 'shotgun', price: 120, owned: player.weapon === 'shotgun' },
-                { id: 'machinegun', price: 200, owned: player.weapon === 'machinegun' },
-                { id: 'speed', price: 80, owned: false }, // Можно покупать много раз
-                { id: 'health', price: 100, owned: false }, // Можно покупать много раз
-                { id: 'regen', price: 150, owned: false }, // Можно покупать много раз
-                { id: 'damageBuff', price: 60, owned: player.buffs.includes('damage') },
-                { id: 'speedBuff', price: 60, owned: player.buffs.includes('speed') }
-            ];
-
-            items.forEach(item => {
-                const element = document.getElementById(item.id + 'Item');
-                if (element) {
-                    // Сбрасываем класс disabled
-                    element.classList.remove('disabled');
-                    
-                    // Убираем старый текст "УЖЕ КУПЛЕНО"
-                    const oldText = element.querySelector('.owned-text');
-                    if (oldText) {
-                        oldText.remove();
-                    }
-                    
-                    // Проверяем условия
-                    if (item.owned) {
-                        element.classList.add('disabled');
-                        const ownedText = document.createElement('div');
-                        ownedText.className = 'owned-text';
-                        ownedText.style.color = '#22c55e';
-                        ownedText.style.fontSize = '12px';
-                        ownedText.style.marginTop = '5px';
-                        ownedText.textContent = '✓ УЖЕ КУПЛЕНО';
-                        element.appendChild(ownedText);
-                    } else if (player.coins < item.price) {
-                        element.classList.add('disabled');
-                    }
-                }
-            });
-        }
-
-        function buyItem(itemType) {
-            const itemElement = document.getElementById(itemType + 'Item');
-            if (itemElement.classList.contains('disabled')) return;
-
-            let price = 0;
-            let success = false;
-
-            switch(itemType) {
-                case 'pistol':
-                    price = 50;
-                    if (player.coins >= price && player.weapon !== 'pistol') {
-                        player.coins -= price;
-                        player.weapon = 'pistol';
-                        player.baseWeaponDamage = 25;
-                        player.shootCooldown = 0.4;
-                        player.updateWeaponDamage();
-                        success = true;
-                    }
-                    break;
-                    
-                case 'shotgun':
-                    price = 120;
-                    if (player.coins >= price && player.weapon !== 'shotgun') {
-                        player.coins -= price;
-                        player.weapon = 'shotgun';
-                        player.baseWeaponDamage = 40;
-                        player.shootCooldown = 0.8;
-                        player.updateWeaponDamage();
-                        success = true;
-                    }
-                    break;
-                    
-                case 'machinegun':
-                    price = 200;
-                    if (player.coins >= price && player.weapon !== 'machinegun') {
-                        player.coins -= price;
-                        player.weapon = 'machinegun';
-                        player.baseWeaponDamage = 15;
-                        player.shootCooldown = 0.15;
-                        player.updateWeaponDamage();
-                        success = true;
-                    }
-                    break;
-                    
-                case 'speed':
-                    price = 80;
-                    if (player.coins >= price) {
-                        player.coins -= price;
-                        player.baseSpeed *= 1.2;
-                        player.speed = player.baseSpeed * player.speedMultiplier;
-                        success = true;
-                    }
-                    break;
-                    
-                case 'health':
-                    price = 100;
-                    if (player.coins >= price) {
-                        player.coins -= price;
-                        player.maxHealth += 50;
-                        player.health += 50;
-                        success = true;
-                    }
-                    break;
-                    
-                case 'regen':
-                    price = 150;
-                    if (player.coins >= price) {
-                        player.coins -= price;
-                        player.regenRate += 5;
-                        success = true;
-                    }
-                    break;
-                    
-                case 'damageBuff':
-                    price = 60;
-                    if (player.coins >= price && !player.buffs.includes('damage')) {
-                        player.coins -= price;
-                        player.applyBuff('damage');
-                        success = true;
-                    }
-                    break;
-                    
-                case 'speedBuff':
-                    price = 60;
-                    if (player.coins >= price && !player.buffs.includes('speed')) {
-                        player.coins -= price;
-                        player.applyBuff('speed');
-                        success = true;
-                    }
-                    break;
-            }
-
-            if (success) {
-                document.getElementById("coinText").textContent = player.coins;
-                document.getElementById("shopCoinText").textContent = player.coins;
-                updateUI();
-                updateShopItems();
-                if (navigator.vibrate) navigator.vibrate(50);
-            }
-        }
-
-        function updateUI() {
-            document.getElementById("healthText").textContent = Math.floor(player.health);
-            document.getElementById("maxHealthText").textContent = player.maxHealth;
-            document.getElementById("damageText").textContent = Math.floor(player.weaponDamage);
-            document.getElementById("speedText").textContent = Math.floor(player.speed);
-            document.getElementById("coinText").textContent = player.coins;
-            
-            let weaponName = "Базовая";
-            switch(player.weapon) {
-                case 'pistol': weaponName = "Пистолет"; break;
-                case 'shotgun': weaponName = "Дробовик"; break;
-                case 'machinegun': weaponName = "Пулемёт"; break;
-            }
-            document.getElementById("weaponText").textContent = weaponName;
-        }
-
-        // ---------- Инициализация игры ----------
-        function initGame() {
-            enemies = [];
-            projectiles = [];
-            coins = [];
-            healthPickups = [];
-            wave = 1;
-            enemiesPerWave = 6;
-            shootTimer = 0;
-            gameTime = 0;
-            currentBoss = null;
-            
-            generateObstacles();
-
-            let px = WORLD_WIDTH / 2;
-            let py = WORLD_HEIGHT / 2;
-            while (checkCollisionCircle(px, py, 30)) {
-                px = randRange(WORLD_WIDTH * 0.4, WORLD_WIDTH * 0.6);
-                py = randRange(WORLD_HEIGHT * 0.4, WORLD_HEIGHT * 0.6);
-            }
-            
-            player = new Player(px, py);
-            updateUI();
-
-            spawnWave();
-
-            camera.x = player.x - canvas.width / 2;
-            camera.y = player.y - canvas.height / 2;
-
-            lastFrameTs = performance.now();
-            gameRunning = true;
-            requestAnimationFrame(gameLoop);
-        }
-
-        function spawnWave() {
-            const ringMin = 400;
-            const ringMax = 700;
-            
-            enemiesPerWave = Math.floor(enemiesPerWave * 1.1 + 1);
-            
-            // Спавн обычных врагов
-            for (let i = 0; i < enemiesPerWave; i++) {
-                let x, y;
-                const angle = Math.random() * Math.PI * 2;
-                const dist = randRange(ringMin, ringMax);
-                x = player.x + Math.cos(angle) * dist;
-                y = player.y + Math.sin(angle) * dist;
-                x = clamp(x, 60, WORLD_WIDTH - 60);
-                y = clamp(y, 60, WORLD_HEIGHT - 60);
-                
-                enemies.push(new Enemy(x, y, wave));
-            }
-            
-            // Спавн быстрых врагов (чаще с ростом волны)
-            const fastCount = Math.floor(enemiesPerWave * (0.2 + wave * 0.02));
-            for (let i = 0; i < fastCount; i++) {
-                let x, y;
-                const angle = Math.random() * Math.PI * 2;
-                const dist = randRange(ringMin, ringMax);
-                x = player.x + Math.cos(angle) * dist;
-                y = player.y + Math.sin(angle) * dist;
-                x = clamp(x, 60, WORLD_WIDTH - 60);
-                y = clamp(y, 60, WORLD_HEIGHT - 60);
-                
-                enemies.push(new FastEnemy(x, y, wave));
-            }
-            
-            // Спавн босса каждые 5 волн
-            if (wave % 5 === 0) {
-                let bx, by;
-                const angle = Math.random() * Math.PI * 2;
-                const dist = 600;
-                bx = player.x + Math.cos(angle) * dist;
-                by = player.y + Math.sin(angle) * dist;
-                bx = clamp(bx, 100, WORLD_WIDTH - 100);
-                by = clamp(by, 100, WORLD_HEIGHT - 100);
-                
-                currentBoss = new BossEnemy(bx, by, wave);
-                enemies.push(currentBoss);
-                
-                // Предупреждение о боссе
-                const warning = document.createElement("div");
-                warning.style.position = "fixed";
-                warning.style.top = "50%";
-                warning.style.left = "50%";
-                warning.style.transform = "translate(-50%, -50%)";
-                warning.style.background = "rgba(0,0,0,0.9)";
-                warning.style.color = "#8b0000";
-                warning.style.padding = "20px";
-                warning.style.borderRadius = "10px";
-                warning.style.border = "3px solid #8b0000";
-                warning.style.fontSize = "24px";
-                warning.style.fontWeight = "bold";
-                warning.style.zIndex = "100";
-                warning.style.textAlign = "center";
-                warning.innerHTML = `⚠️ ПОЯВИЛСЯ БОСС ${Math.floor(wave/5)} УРОВНЯ! ⚠️`;
-                document.body.appendChild(warning);
-                
-                setTimeout(() => {
-                    if (warning.parentNode) {
-                        document.body.removeChild(warning);
-                    }
-                }, 3000);
-            }
-            
-            wave++;
-            document.getElementById("waveText").textContent = wave - 1;
-        }
-
-        function shoot() {
-            let projectilesToAdd = [];
-            
-            switch(player.weapon) {
-                case 'basic':
-                case 'pistol':
-                    const dx1 = lastMousePos.x + camera.x - player.x;
-                    const dy1 = lastMousePos.y + camera.y - player.y;
-                    const len1 = Math.hypot(dx1, dy1) || 1;
-                    projectilesToAdd.push(new Projectile(
-                        player.x, player.y, 
-                        dx1/len1, dy1/len1, 
-                        player.weaponDamage,
-                        player.weapon
-                    ));
-                    break;
-                    
-                case 'shotgun':
-                    for (let i = -1; i <= 1; i++) {
-                        const angle = Math.atan2(
-                            lastMousePos.y + camera.y - player.y,
-                            lastMousePos.x + camera.x - player.x
-                        ) + i * 0.2;
-                        projectilesToAdd.push(new Projectile(
-                            player.x, player.y,
-                            Math.cos(angle), Math.sin(angle),
-                            player.weaponDamage,
-                            'shotgun'
-                        ));
-                    }
-                    break;
-                    
-                case 'machinegun':
-                    const dx3 = lastMousePos.x + camera.x - player.x;
-                    const dy3 = lastMousePos.y + camera.y - player.y;
-                    const len3 = Math.hypot(dx3, dy3) || 1;
-                    const spread = (Math.random() - 0.5) * 0.1;
-                    const angle = Math.atan2(dy3, dx3) + spread;
-                    projectilesToAdd.push(new Projectile(
-                        player.x, player.y,
-                        Math.cos(angle), Math.sin(angle),
-                        player.weaponDamage,
-                        'machinegun'
-                    ));
-                    break;
-            }
-            
-            projectiles.push(...projectilesToAdd);
-            if (navigator.vibrate) navigator.vibrate(30);
-        }
-
-        // ---------- Мышь (для направления выстрела) ----------
-        const lastMousePos = { x: 0, y: 0 };
-        canvas.addEventListener("mousemove", (e) => {
-            const rect = canvas.getBoundingClientRect();
-            lastMousePos.x = e.clientX - rect.left;
-            lastMousePos.y = e.clientY - rect.top;
-        });
-
-        // ---------- Игровой цикл ----------
-        function gameLoop(timestamp) {
-            if (!gameRunning) return;
-
-            const dt = Math.min((timestamp - lastFrameTs) / 1000, 0.05);
-            lastFrameTs = timestamp;
-            gameTime += dt;
-
-            // Стрельба
-            shootTimer -= dt;
-            if ((rightMouseDown || keys["Space"]) && shootTimer <= 0) {
-                shoot();
-                shootTimer = player.shootCooldown;
-            }
-
-            player.update(dt);
-
-            // Обновление врагов
-            for (let i = enemies.length - 1; i >= 0; i--) {
-                const e = enemies[i];
-                e.update(dt);
-
-                // Проверка попаданий снарядов
-                for (let j = projectiles.length - 1; j >= 0; j--) {
-                    const p = projectiles[j];
-                    const d = Math.hypot(e.x - p.x, e.y - p.y);
-                    if (d < e.size + p.size) {
-                        e.health -= p.damage;
-                        projectiles.splice(j, 1);
-                        break;
-                    }
-                }
-
-                // Смерть врага
-                if (e.health <= 0) {
-                    // Выпадение монет с разными значениями
-                    let coinValue = 5; // По умолчанию 5 монет
-                    if (e.type === 'boss') {
-                        coinValue = 50; // Босс дает 50 монет
-                    }
-                    
-                    // Создаем одну монету с нужным значением
-                    coins.push(new Coin(e.x, e.y, coinValue));
-                    
-                    // Шанс выпадения аптечки
-                    if (Math.random() < 0.1) {
-                        healthPickups.push(new HealthPickup(e.x, e.y));
-                    }
-                    
-                    enemies.splice(i, 1);
-                    
-                    // Если умер босс
-                    if (e.type === 'boss') {
-                        currentBoss = null;
-                    }
-                }
-            }
-
-            // Обновление снарядов
-            for (let i = projectiles.length - 1; i >= 0; i--) {
-                const p = projectiles[i];
-                p.update(dt);
-                if (p.life <= 0 ||
-                    p.x < 0 || p.y < 0 ||
-                    p.x > WORLD_WIDTH || p.y > WORLD_HEIGHT) {
-                    projectiles.splice(i, 1);
-                }
-            }
-
-            // Сбор монет
-            for (let i = coins.length - 1; i >= 0; i--) {
-                const coin = coins[i];
-                coin.update(dt);
-                const d = Math.hypot(player.x - coin.x, player.y - coin.y);
-                if (d < player.size + coin.size + 5) {
-                    player.addCoins(coin.value);
-                    coins.splice(i, 1);
-                }
-            }
-
-            // Сбор аптечек
-            for (let i = healthPickups.length - 1; i >= 0; i--) {
-                const hp = healthPickups[i];
-                const d = Math.hypot(player.x - hp.x, player.y - hp.y);
-                if (d < player.size + hp.size + 5) {
-                    player.health = Math.min(player.maxHealth, player.health + 30);
-                    healthPickups.splice(i, 1);
-                }
-            }
-
-            // Поражение
-            if (player.health <= 0) {
-                endGame();
-                return;
-            }
-
-            // Новая волна
-            if (enemies.length === 0) {
-                spawnWave();
-            }
-
-            // Камера
-            camera.x = clamp(player.x - canvas.width / 2, 0, WORLD_WIDTH - canvas.width);
-            camera.y = clamp(player.y - canvas.height / 2, 0, WORLD_HEIGHT - canvas.height);
-
-            // Отрисовка
-            drawScene();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        // ---------- Отрисовка сцены ----------
-        function drawScene() {
-            // Тёмный фон
-            ctx.fillStyle = "#0a0a0a";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Лесной фон
-            const tileScreenSize = TILE_SIZE;
-            const startX = Math.floor(camera.x / TILE_SIZE) * TILE_SIZE;
-            const startY = Math.floor(camera.y / TILE_SIZE) * TILE_SIZE;
-
-            for (let x = startX; x < camera.x + canvas.width; x += TILE_SIZE) {
-                for (let y = startY; y < camera.y + canvas.height; y += TILE_SIZE) {
-                    const sx = x - camera.x;
-                    const sy = y - camera.y;
-                    const noise = ((x ^ y) & 32) ? 0.02 : -0.02;
-                    const darkness = 0.15 + Math.sin(x * 0.001 + y * 0.001) * 0.05;
-                    ctx.fillStyle = `rgba(30, 41, 59, ${darkness + noise})`;
-                    ctx.fillRect(sx, sy, tileScreenSize, tileScreenSize);
-                }
-            }
-
-            // Препятствия
-            for (const o of obstacles) {
-                const sx = o.x - camera.x;
-                const sy = o.y - camera.y;
-                if (sx < -60 || sy < -60 ||
-                    sx > canvas.width + 60 ||
-                    sy > canvas.height + 60) continue;
-
-                if (o.type === "tree") {
-                    ctx.fillStyle = "#1e293b";
-                    ctx.fillRect(sx - 3, sy - o.r * 0.8, 6, o.r * 1.6);
-                    
-                    ctx.fillStyle = "#064e3b";
-                    ctx.beginPath();
-                    ctx.arc(sx, sy, o.r, 0, Math.PI * 2);
-                    ctx.fill();
-                } else {
-                    ctx.fillStyle = "#374151";
-                    ctx.beginPath();
-                    ctx.arc(sx, sy, o.r, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.fillStyle = "#4b5563";
-                    ctx.beginPath();
-                    ctx.arc(sx - o.r * 0.3, sy - o.r * 0.3, o.r * 0.4, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-
-            // Объекты
-            for (const hp of healthPickups) hp.draw(camera);
-            for (const coin of coins) coin.draw(camera);
-            for (const e of enemies) e.draw(camera);
-            for (const p of projectiles) p.draw(camera);
-            player.draw(camera);
-
-            // UI
-            updateUI();
-            document.getElementById("timeText").textContent = Math.floor(gameTime);
-            document.getElementById("waveText").textContent = wave - 1;
-
-            // Миникарта
-            drawMinimap();
-        }
-
-        // ---------- Миникарта ----------
-        function drawMinimap() {
-            const W = minimapCanvas.width;
-            const H = minimapCanvas.height;
-            minimapCtx.clearRect(0, 0, W, H);
-            
-            // Серый фон
-            minimapCtx.fillStyle = "rgba(128, 128, 128, 0.3)";
-            minimapCtx.fillRect(0, 0, W, H);
-
-            const scaleX = W / WORLD_WIDTH;
-            const scaleY = H / WORLD_HEIGHT;
-            const s = Math.min(scaleX, scaleY);
-
-            // Рамка
-            minimapCtx.strokeStyle = "#808080";
-            minimapCtx.lineWidth = 2;
-            minimapCtx.strokeRect(4, 4, W - 8, H - 8);
-
-            function drawDot(obj, color, size) {
-                const x = obj.x * s;
-                const y = obj.y * s;
-                minimapCtx.fillStyle = color;
-                minimapCtx.beginPath();
-                minimapCtx.arc(x, y, size, 0, Math.PI * 2);
-                minimapCtx.fill();
-            }
-
-            function drawBossIcon(x, y, size, pulse) {
-                const pulseSize = Math.sin(pulse) * 2;
-                
-                minimapCtx.fillStyle = "#8b0000";
-                minimapCtx.beginPath();
-                minimapCtx.arc(x, y, size + pulseSize, 0, Math.PI * 2);
-                minimapCtx.fill();
-                
-                minimapCtx.fillStyle = "#ff0000";
-                minimapCtx.beginPath();
-                minimapCtx.arc(x, y, size * 0.7 + pulseSize, 0, Math.PI * 2);
-                minimapCtx.fill();
-                
-                minimapCtx.fillStyle = "#ffffff";
-                minimapCtx.font = "bold 8px Arial";
-                minimapCtx.textAlign = "center";
-                minimapCtx.textBaseline = "middle";
-                minimapCtx.fillText("B", x, y);
-            }
-
-            // Враги
-            for (const e of enemies) {
-                if (e.type === "fast") {
-                    drawDot(e, "#3b82f6", 3); // Синие монстры
-                } else if (e.type === "boss") {
-                    drawBossIcon(e.x * s, e.y * s, 6, e.pulse);
-                } else {
-                    drawDot(e, "#dc2626", 2); // Красные монстры
-                }
-            }
-
-            // Игрок
-            drawDot(player, "#3b82f6", 4);
-
-            // Монеты
-            for (const coin of coins) {
-                drawDot(coin, "#fbbf24", 1);
-            }
-
-            // Препятствия (серые точки)
-            for (const o of obstacles) {
-                minimapCtx.fillStyle = "rgba(96, 96, 96, 0.5)";
-                minimapCtx.beginPath();
-                minimapCtx.arc(o.x * s, o.y * s, Math.max(1, o.r * s * 0.3), 0, Math.PI * 2);
-                minimapCtx.fill();
-            }
-        }
-
-        // ---------- Завершение игры ----------
-        function endGame() {
-            gameRunning = false;
-            hideAllScreens();
-            const over = document.getElementById("gameOverScreen");
-            over.style.display = "flex";
-            document.getElementById("gameOverTitle").textContent = "ВЫ ПРОИГРАЛИ!";
-            document.getElementById("finalTime").textContent = Math.floor(gameTime);
-            document.getElementById("finalWave").textContent = wave - 1;
-            document.getElementById("finalCoins").textContent = player.coins;
-            
-            let weaponName = "Базовая";
-            switch(player.weapon) {
-                case 'pistol': weaponName = "Пистолет"; break;
-                case 'shotgun': weaponName = "Дробовик"; break;
-                case 'machinegun': weaponName = "Пулемёт"; break;
-            }
-            document.getElementById("finalWeapon").textContent = weaponName;
-        }
-    </script>
+      } catch {}
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }
+
+  async function startScan() {
+    if (!("BarcodeDetector" in window)) {
+      addSys("❌ BarcodeDetector не поддерживается в этом браузере. На iPhone используйте системную камеру для QR-ссылки.");
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      addSys("❌ getUserMedia недоступен. Нужен HTTPS или localhost.");
+      return;
+    }
+
+    scanStopFlag = false;
+
+    try {
+      scanStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      ui.scanVideo.srcObject = scanStream;
+      await ui.scanVideo.play();
+    } catch (e) {
+      addSys("❌ Не удалось открыть камеру: " + (e?.message || e));
+      return;
+    }
+
+    ui.btnScanStart.disabled = true;
+    ui.btnScanStop.disabled = false;
+
+    const detector = new BarcodeDetector({ formats: ["qr_code"] });
+    addSys("📷 Сканирование запущено.");
+    scanLoop(detector);
+  }
+
+  async function stopScan() {
+    scanStopFlag = true;
+    ui.btnScanStart.disabled = false;
+    ui.btnScanStop.disabled = true;
+
+    try {
+      ui.scanVideo.pause();
+      ui.scanVideo.srcObject = null;
+    } catch {}
+
+    if (scanStream) {
+      for (const tr of scanStream.getTracks()) {
+        try { tr.stop(); } catch {}
+      }
+    }
+    scanStream = null;
+  }
+
+  // --------------------------
+  // Pills + diag
+  // --------------------------
+  function updatePills() {
+    const openDcs = openChannels().length;
+
+    // Room participants count (WS roster) if available; fallback to connection count.
+    let roomCount = 0;
+    if (ws && ws.readyState === 1) {
+      for (const r of roster.values()) if (r.present) roomCount++;
+      // If WS is open but roster not populated yet, show 1 (self).
+      if (roomCount === 0) roomCount = selfId ? 1 : 0;
+    } else {
+      roomCount = peerConns.size + (dcManual && dcManual.readyState === "open" ? 1 : 0);
+    }
+
+    const mx = roomMax ? ("/" + roomMax) : "";
+    setPill(ui.pillPeers, `Peers: ${roomCount}${mx}`, roomCount > 1 ? "ok" : "");
+    setPill(ui.pillDC, `DC: ${openDcs}`, openDcs > 0 ? "ok" : "");
+
+    // ICE summary
+    let ice = "idle";
+    let anyFailed = false;
+    let anyChecking = false;
+    for (const st of peerConns.values()) {
+      const s = st.ice || "";
+      if (s === "failed") anyFailed = true;
+      if (s === "checking") anyChecking = true;
+      if (s === "connected" || s === "completed") ice = "ok";
+    }
+    if (anyFailed) {
+      setPill(ui.pillICE, "ICE: failed", "bad");
+    } else if (anyChecking) {
+      setPill(ui.pillICE, "ICE: checking");
+    } else {
+      setPill(ui.pillICE, "ICE: " + ice, ice === "ok" ? "ok" : "");
+    }
+
+    // WS pill
+    if (!ws) setPill(ui.pillWS, "WS: off");
+    else {
+      const s = wsStateText(ws.readyState);
+      setPill(ui.pillWS, "WS: " + s, s === "open" ? "ok" : (s === "error" ? "bad" : ""));
+    }
+
+    // E2EE pill
+    const e = (ui.e2eePass.value || "").length > 0;
+    setPill(ui.pillE2EE, e ? "E2EE: on" : "E2EE: off", e ? "ok" : "");
+
+    // send button enabled if any channel open
+    ui.btnSend.disabled = openDcs === 0;
+    ui.btnPing.disabled = openDcs === 0;
+  }
+
+  function updateDiag() {
+    ui.dgSelf.textContent = selfId ? shortId(selfId) : "—";
+    ui.dgRoom.textContent = (ui.room.value || "").trim() || "—";
+    ui.dgPeers.textContent = String(peerConns.size) + (ws && ws.readyState === 1 ? (" (roster:" + roster.size + ")") : "");
+    ui.dgDcs.textContent = String(openChannels().length);
+    ui.dgWS.textContent = ws ? wsStateText(ws.readyState) : "off";
+
+    const pass = (ui.e2eePass.value || "");
+    ui.dgE2EE.textContent = pass ? ("on (salt=" + roomSalt() + ")") : "off";
+  }
+
+  // --------------------------
+  // Participants list (roster)
+  // --------------------------
+  function fmtAgo(ts) {
+    if (!ts) return "—";
+    const sec = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+    if (sec < 60) return sec + "s";
+    const min = Math.floor(sec / 60);
+    if (min < 60) return min + "m";
+    const hr = Math.floor(min / 60);
+    return hr + "h";
+  }
+
+  function pruneRoster() {
+    const TTL = 10 * 60 * 1000; // keep "left" peers for 10 minutes
+    const now = Date.now();
+    for (const [id, r] of roster.entries()) {
+      if (id === selfId) continue;
+      if (r.present) continue;
+      if (peerConns.has(id)) continue;
+      if (r.leftAt && (now - r.leftAt > TTL)) roster.delete(id);
+    }
+  }
+
+  function renderParticipants() {
+    if (!ui.participantsList) return;
+    pruneRoster();
+
+    // room participants
+    const presentIds = [];
+    for (const [id, r] of roster.entries()) if (r.present) presentIds.push(id);
+    const roomCount = (ws && ws.readyState === 1) ? (presentIds.length || (selfId ? 1 : 0)) : presentIds.length;
+    const mx = roomMax ? ("/" + roomMax) : "";
+    ui.participantsCount.textContent = `(${roomCount}${mx})`;
+
+    // self computed mesh
+    const selfOpen = [];
+    for (const [pid, st] of peerConns.entries()) {
+      if (st.dc && st.dc.readyState === "open") selfOpen.push(pid);
+    }
+    const target = Math.max(0, roomCount - 1);
+    const selfMeshCount = selfOpen.length;
+
+    const rows = [];
+
+    // self row
+    rows.push({
+      id: selfId || "local",
+      isSelf: true,
+      name: localDisplayName() + " (вы)",
+      dot: (ws && ws.readyState === 1) ? (selfMeshCount ? "ok" : "warn") : "",
+      tags: [ (ws && ws.readyState === 1) ? { t:"ws", k:"ok" } : { t:"ws off", k:"" } ],
+      meta: `id:${selfId ? shortId(selfId) : "—"} · dc:${selfMeshCount} · mesh:${selfMeshCount}/${target}`,
+      title: selfOpen.length ? ("connected to: " + selfOpen.map(displayPeerName).join(", ")) : "",
+    });
+
+    // other peers
+    const peerIds = [...roster.keys()].filter(id => id !== selfId);
+    peerIds.sort((a, b) => {
+      const ra = roster.get(a), rb = roster.get(b);
+      const pa = ra?.present ? 1 : 0;
+      const pb = rb?.present ? 1 : 0;
+      if (pa !== pb) return pb - pa;
+      const na = (ra?.name || "").toLowerCase();
+      const nb = (rb?.name || "").toLowerCase();
+      if (na && nb && na !== nb) return na < nb ? -1 : 1;
+      return String(a) < String(b) ? -1 : 1;
+    });
+
+    for (const pid of peerIds) {
+      const r = roster.get(pid);
+      const st = peerConns.get(pid);
+      const dcState = st?.dc ? st.dc.readyState : "none";
+      const iceState = st?.ice || "—";
+      const connState = st?.conn || "—";
+
+      let dot = "";
+      if (r?.present) {
+        if (dcState === "open") dot = "ok";
+        else if (iceState === "failed" || connState === "failed") dot = "bad";
+        else if (r?.reconnecting || iceState === "checking" || connState === "connecting") dot = "warn";
+        else dot = "warn";
+      }
+
+      const meshCount = r?.meshOpen ? r.meshOpen.size : null;
+      const meshText = (meshCount === null) ? `mesh:—/${target}` : `mesh:${meshCount}/${target}`;
+
+      const tags = [];
+      if (r?.present) tags.push({ t:"ws", k:"ok" });
+      else tags.push({ t:"left", k:"" });
+      if (dcState === "open") tags.push({ t:"dc", k:"ok" });
+      if (iceState === "failed" || connState === "failed") tags.push({ t:"fail", k:"bad" });
+      if (r?.reconnecting) tags.push({ t:"reconnect", k:"" });
+
+      const leftInfo = (!r?.present && r?.leftAt) ? (` · left:${fmtAgo(r.leftAt)} ago`) : "";
+      const seenInfo = r?.lastSeen ? (` · seen:${fmtAgo(r.lastSeen)} ago`) : "";
+
+      const title = (r?.meshOpen && r.meshOpen.size)
+        ? ("connected to: " + [...r.meshOpen].map(displayPeerName).join(", "))
+        : "";
+
+      rows.push({
+        id: pid,
+        isSelf: false,
+        name: displayPeerName(pid),
+        dot,
+        tags,
+        meta: `id:${shortId(pid)} · dc:${dcState} · ice:${iceState} · rtc:${connState} · ${meshText}${seenInfo}${leftInfo}`,
+        title,
+      });
+    }
+
+    ui.participantsList.innerHTML = rows.map((row) => {
+      const tagsHtml = (row.tags || []).map(t => `<span class="tag ${t.k || ""}">${escapeHtml(t.t)}</span>`).join(" ");
+      return `
+        <div class="prow" ${row.title ? `title="${escapeHtml(row.title)}"` : ""}>
+          <div class="dot ${row.dot || ""}"></div>
+          <div style="flex:1; min-width: 0;">
+            <div class="pname">${escapeHtml(row.name)}</div>
+            <div class="pmeta mono">${escapeHtml(row.meta)}</div>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">${tagsHtml}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // --------------------------
+  // Reset
+  // --------------------------
+  function resetAll() {
+    stopScan();
+
+    // Close room peers
+    closeAllPeers();
+
+    // Cancel reconnect timers
+    for (const t of reconnectTimers.values()) {
+      try { clearTimeout(t); } catch {}
+    }
+    reconnectTimers.clear();
+
+    // Clear roster
+    roster.clear();
+
+    // Close manual pc
+    try { dcManual?.close(); } catch {}
+    try { pcManual?.close(); } catch {}
+    dcManual = null;
+    pcManual = null;
+
+    // Close WS
+    if (ws) { try { ws.close(); } catch {} }
+    ws = null;
+    selfId = null;
+    roomMax = null;
+
+    ui.localSdp.value = "";
+    ui.remoteSdp.value = "";
+
+    clearQrCanvases();
+
+    addSys("Сброшено.");
+    updatePills();
+    updateDiag();
+    renderParticipants();
+  }
+
+  // --------------------------
+  // Buttons
+  // --------------------------
+  function randRoom(len = 6) {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let s = "";
+    crypto.getRandomValues(new Uint8Array(len)).forEach((b) => s += alphabet[b % alphabet.length]);
+    return s;
+  }
+
+  ui.btnReset.onclick = () => resetAll();
+
+  ui.btnRoomNew.onclick = () => {
+    ui.room.value = randRoom(6);
+    lsSet(LS.room, ui.room.value);
+    refreshInviteUI();
+    invalidateE2EE();
+    addSys("✅ Комната создана: " + ui.room.value);
+  };
+
+  ui.btnWsConnect.onclick = () => connectWs();
+  ui.btnWsDisconnect.onclick = () => disconnectWs();
+
+  ui.btnMakeRoomQr.onclick = () => makeRoomQr();
+  ui.btnCopyInvite.onclick = () => copyInvite();
+  ui.btnShareInvite.onclick = () => shareInvite();
+
+  ui.btnCopyRoomInfo.onclick = async () => {
+    const room = (ui.room.value || "").trim() || "(no room)";
+    const wsUrl = (ui.wsUrl.value || "").trim() || "(no ws)";
+    const me = selfId ? shortId(selfId) : "—";
+    const link = (ui.inviteLink.value || "").trim();
+    const txt = `room=${room}\nws=${wsUrl}\nme=${me}` + (link ? (`\nlink=${link}`) : "");
+    try {
+      await navigator.clipboard.writeText(txt);
+      addSys("📋 Скопировано: room/ws/me (без пароля)");
+    } catch {
+      addSys("❗ Не удалось скопировать. Скопируйте вручную: " + txt);
+    }
+  };
+
+  ui.btnScanStart.onclick = () => startScan();
+  ui.btnScanStop.onclick = () => stopScan();
+
+  ui.btnCreateOffer.onclick = () => createOfferManual();
+  ui.btnApplyRemote.onclick = () => applyRemoteManual();
+  ui.btnCopyLocal.onclick = () => copyLocal();
+  ui.btnMakeSdpQr.onclick = () => makeSdpQr();
+
+  ui.btnSend.onclick = async () => {
+    const text = (ui.msg.value || "").trim();
+    if (!text) return;
+
+    const payload = {
+      t: "chat",
+      from: localDisplayName(),
+      fromId: selfId,
+      text,
+      at: Date.now(),
+    };
+
+    try {
+      await broadcast(payload);
+      addChat(localDisplayName(), text, true);
+      ui.msg.value = "";
+      updatePills();
+      updateDiag();
+    } catch (e) {
+      addSys("❗ Не удалось отправить: " + (e?.message || e));
+    }
+  };
+
+  ui.msg.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") ui.btnSend.click();
+  });
+
+  ui.btnPing.onclick = async () => {
+    const chans = openChannels();
+    if (!chans.length) return;
+    const wire = JSON.stringify({ t: "ping", at: Date.now() });
+    for (const c of chans) {
+      try { c.dc.send(wire); } catch {}
+    }
+    addSys("➡️ ping");
+  };
+
+  ui.btnClearChat.onclick = () => {
+    ui.chat.innerHTML = "";
+    addSys("Чат очищен.");
+  };
+
+  // --------------------------
+  // Init: parse invite from URL
+  // --------------------------
+  function applyInviteFromUrl() {
+    const u = new URL(location.href);
+    const wsParam = u.searchParams.get("ws");
+    const roomParam = u.searchParams.get("room");
+    const autojoin = u.searchParams.get("autojoin") === "1";
+
+    if (wsParam && roomParam) {
+      ui.wsUrl.value = wsParam;
+      ui.room.value = roomParam;
+      lsSet(LS.wsUrl, ui.wsUrl.value);
+      lsSet(LS.room, ui.room.value);
+      refreshInviteUI();
+      invalidateE2EE();
+      addSys("✅ Приглашение применено из ссылки." + (autojoin ? " Подключаюсь…" : ""));
+      if (autojoin) connectWs();
+    }
+  }
+
+  // PWA
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
+
+  clearQrCanvases();
+  refreshInviteUI();
+  applyInviteFromUrl();
+
+  addSys("Готово. Для группового чата используйте режим комнаты. Для E2EE задайте пароль.");
+  updatePills();
+  updateDiag();
+  renderParticipants();
+})();
+</script>
 </body>
 </html>
